@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.pyc
+
+# Django
+media/
+static/
+
+# Logs
+*.log
+logs/
+
+# Env & secrets
+.env
+.env.*
+*.ini
+
+# Editor / OS
+.vscode/
+.idea/
+.DS_Store
+
+# Testing
+.pytest_cache/
+
+# Misc
+note.txt

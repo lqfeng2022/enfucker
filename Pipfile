@@ -1,0 +1,39 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+django = "*"
+django-debug-toolbar = "*"
+djangorestframework = "*"
+django-filter = "*"
+cryptography = "*"
+djoser = "*"
+djangorestframework-simplejwt = "*"
+drf-nested-routers = "*"
+django-cors-headers = "*"
+pyyaml = "*"
+ua-parser = "*"
+user-agents = "*"
+pillow = "*"
+dj-database-url = "*"
+elevenlabs = "*"
+python-dotenv = "*"
+mutagen = "*"
+redis = "*"
+celery = "*"
+mysqlclient = "*"
+django-redis = "*"
+
+[dev-packages]
+pytest = "*"
+pytest-django = "*"
+model-bakery = "*"
+
+[requires]
+python_version = "3.12"
+
+# NOTE:
+# openai is installed manually on the server due to pipenv resolver issues
+# DO NOT remove from server venv
