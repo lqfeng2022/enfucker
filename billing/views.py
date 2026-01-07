@@ -1,5 +1,5 @@
 from rest_framework import status
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 from rest_framework.decorators import action
@@ -12,12 +12,16 @@ from .models import CreditVoucher, CreditAccount
 
 
 class CreditViewSet(ListModelMixin, GenericViewSet):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAdminUser]
 
     serializer_class = CreditCountSerializer
+    queryset = CreditAccount.objects.all()
 
-    def get_queryset(self):
-        return CreditAccount.objects.filter(user=self.request.user)
+    @action(detail=False, methods=['GET'], permission_classes=[IsAuthenticated])
+    def me(self, request):
+        credit = CreditAccount.objects.get(user=request.user)
+        serializer = CreditCountSerializer(credit)
+        return Response(serializer.data)
 
 
 class VoucherViewSet(ListModelMixin, GenericViewSet):

@@ -13,7 +13,7 @@ class CreditCountSerializer(serializers.ModelSerializer):
 class CreditVoucherListSerializer(serializers.ModelSerializer):
     class Meta:
         model = CreditVoucher
-        fields = ['id', 'code', 'credits', 'redeemed_by', 'redeemed_at', 'redeemed',
+        fields = ['id', 'code', 'credits', 'redeemed_at', 'redeemed',
                   'expires_at']
 
 
