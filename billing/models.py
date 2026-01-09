@@ -70,9 +70,10 @@ class CreditVoucher(models.Model):
     expires_at = models.DateTimeField(null=True, blank=True)
     is_expired = models.BooleanField(default=False)
 
-    PACKAGE_CHOICES = [(5000, '5,000 credits'), (10000, '10,000 credits'),
-                       (50000, '50,000 credits'), (100000, '100,000 credits'),
-                       (500000, '500,000 credits'), (1000000, '1,000,000 credits')]
+    PACKAGE_CHOICES = [(1000, '1,000 credits'), (5000, '5,000 credits'),
+                       (10000, '10,000 credits'), (50000, '50,000 credits'),
+                       (100000, '100,000 credits'), (500000, '500,000 credits'),
+                       (1000000, '1,000,000 credits')]
 
     credits = models.PositiveIntegerField(choices=PACKAGE_CHOICES)
     code = models.CharField(max_length=32, unique=True, editable=False)
