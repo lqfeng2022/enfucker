@@ -29,3 +29,8 @@ ALLOWED_HOSTS = [
 # get the cookie from the front-end webss
 SESSION_COOKIE_DOMAIN = '.clipwords.me'
 CSRF_COOKIE_DOMAIN = '.clipwords.me'
+
+# auth
+AUTH_COOKIE_SECURE = True
+AUTH_COOKIE_SAMESITE = 'None'
+AUTH_COOKIE_DOMAIN = '.clipwords.me'

@@ -61,6 +61,9 @@ CORS_ALLOWED_ORIGINS = [
 ]
 
 # Cookies
+AUTH_COOKIE_NAME = 'access_token'
+AUTH_COOKIE_MAX_AGE = 60 * 60 * 24 * 5  # 5 days
+
 SESSION_COOKIE_SAMESITE = 'None'  # or 'None' + Secure if cross-origin
 SESSION_COOKIE_SECURE = True    # only True if using HTTPS
 

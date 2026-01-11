@@ -38,3 +38,8 @@ ALLOWED_HOSTS = [
 # disable the cookie in dev mode
 SESSION_COOKIE_DOMAIN = None
 CSRF_COOKIE_DOMAIN = None
+
+# auth
+AUTH_COOKIE_SECURE = False
+AUTH_COOKIE_SAMESITE = 'Lax'
+AUTH_COOKIE_DOMAIN = None

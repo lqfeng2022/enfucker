@@ -9,6 +9,7 @@ from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from .useragent import save_user_agent_info
 from .models import Profile
 from .serializers import ProfileSerializer
+from django.conf import settings
 
 
 # 1)'profile/'
@@ -50,13 +51,13 @@ class CookieLoginView(APIView):
             res = Response({'message': 'Login successful'},
                            status=status.HTTP_200_OK)
             res.set_cookie(
-                key='access_token',
+                key=settings.AUTH_COOKIE_NAME,
                 value=str(refresh.access_token),
                 httponly=True,
-                samesite='None',  # or 'None' for cross-site
-                secure=True,    # change to True in production
-                domain='.clipwords.me',  # add domain
-                max_age=60 * 60 * 24 * 5  # 5 days
+                secure=settings.AUTH_COOKIE_SECURE,  # change to True in production
+                samesite=settings.AUTH_COOKIE_SAMESITE,  # or 'None' for cross-site
+                domain=settings.AUTH_COOKIE_DOMAIN,  # add domain
+                max_age=settings.AUTH_COOKIE_MAX_AGE  # 5 days
             )
 
             return res
@@ -74,10 +75,10 @@ class CookieLogoutView(APIView):
             {'message': 'Logged out'}, status=status.HTTP_200_OK
         )
         res.delete_cookie(
-            key='access_token',
+            key=settings.AUTH_COOKIE_NAME,
             path='/',
-            samesite='None',
-            domain='.clipwords.me',  # add domain
+            domain=settings.AUTH_COOKIE_DOMAIN,  # add domain
+            samesite=settings.AUTH_COOKIE_SAMESITE,
         )
 
         return res
