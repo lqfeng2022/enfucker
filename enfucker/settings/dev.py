@@ -33,3 +33,8 @@ ALLOWED_HOSTS = [
     '127.0.0.1',
     'localhost',
 ]
+
+
+# disable the cookie in dev mode
+SESSION_COOKIE_DOMAIN = None
+CSRF_COOKIE_DOMAIN = None

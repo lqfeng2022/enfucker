@@ -30,6 +30,7 @@ INSTALLED_APPS = [
     'billing',
 ]
 
+
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'debug_toolbar.middleware.DebugToolbarMiddleware',
@@ -42,13 +43,16 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
+
 INTERNAL_IPS = [
     # ...
     '127.0.0.1',
     # ...
 ]
 
-# prefer to put right after INTERNAL_IPS, cus it’s similar
+
+# CORS
+CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGINS = [
     'http://localhost:5173',
     'http://127.0.0.1:5173',
@@ -56,15 +60,15 @@ CORS_ALLOWED_ORIGINS = [
     'https://app.clipwords.me',
 ]
 
-# get the cookie from the front-end webss
-SESSION_COOKIE_DOMAIN = '.clipwords.me'
-CSRF_COOKIE_DOMAIN = '.clipwords.me'
-CORS_ALLOW_CREDENTIALS = True
+# Cookies
 SESSION_COOKIE_SAMESITE = 'None'  # or 'None' + Secure if cross-origin
 SESSION_COOKIE_SECURE = True    # only True if using HTTPS
+
 SESSION_ENGINE = 'django.contrib.sessions.backends.db'  # or cache/db/etc
 
+
 ROOT_URLCONF = 'enfucker.urls'
+
 
 TEMPLATES = [
     {
@@ -80,6 +84,7 @@ TEMPLATES = [
         },
     },
 ]
+
 
 WSGI_APPLICATION = 'enfucker.wsgi.application'
 

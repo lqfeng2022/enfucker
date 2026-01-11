@@ -25,3 +25,7 @@ ALLOWED_HOSTS = [
     'clipwords.me',
     'www.clipwords.me',
 ]
+
+# get the cookie from the front-end webss
+SESSION_COOKIE_DOMAIN = '.clipwords.me'
+CSRF_COOKIE_DOMAIN = '.clipwords.me'
