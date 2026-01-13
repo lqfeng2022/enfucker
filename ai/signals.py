@@ -1,5 +1,4 @@
 import os
-from django.apps import apps
 from django.conf import settings
 from django.core.cache import cache
 from django.db.models.signals import pre_save, post_delete, post_save
@@ -18,21 +17,24 @@ def invalidate_prompt_cache(sender, instance, **kwargs):
 
 
 def create_default_host_profile(host):
-    chat_model = apps.get_model(settings.DEFAULT_CHAT_MODEL_NAME)
-    stt_model = apps.get_model(settings.DEFAULT_STT_MODEL_NAME)
-    tts_model = apps.get_model(settings.DEFAULT_TTS_MODEL_NAME)
-    base_prompt = apps.get_model(settings.DEFAULT_BASE_PROMPT_SLUG)
-    persona_prompt = apps.get_model(settings.DEFAULT_PERSONA_PROMPT_SLUG)
-    voice_id = apps.get_model(settings.DEFAULT_VOICE_SLUG)
-
     HostProfile.objects.create(
         host=host,
-        chat_model=AIModel.objects.get(name=chat_model),
-        stt_model=AIModel.objects.get(name=stt_model),
-        tts_model=AIModel.objects.get(name=tts_model),
-        base_prompt=BasePrompt.objects.get(slug=base_prompt),
-        persona_prompt=PersonaPrompt.objects.get(slug=persona_prompt),
-        voice=Voice.objects.get(slug=voice_id),
+        chat_model=AIModel.objects.get(
+            name=settings.DEFAULT_CHAT_MODEL_NAME
+        ),
+        stt_model=AIModel.objects.get(
+            name=settings.DEFAULT_STT_MODEL_NAME
+        ),
+        tts_model=AIModel.objects.get(
+            name=settings.DEFAULT_TTS_MODEL_NAME
+        ),
+        base_prompt=BasePrompt.objects.get(
+            slug=settings.DEFAULT_BASE_PROMPT_SLUG
+        ),
+        persona_prompt=PersonaPrompt.objects.get(
+            slug=settings.DEFAULT_PERSONA_PROMPT_SLUG
+        ),
+        voice=Voice.objects.get(slug=settings.DEFAULT_VOICE_SLUG),
     )
 
 
