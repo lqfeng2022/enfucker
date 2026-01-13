@@ -1,13 +1,12 @@
 from django.contrib import admin
 from .models import (
     Country, City, Language, Genre, Alphabet, Video, Subtitle, Expression,
-    Product, Host
-)
+    Product, Host)
 from .mixins.admin import (
     ThumbnailMixin, VideoCountMixin, VideoLinkMixin, SubtitleCountMinxin,
     SubtitleLinkMixin, ExpressionCountMixin, FormattedUpdateDateMixin,
-    ProductTypeFilter, ContentLinkMixin, ProductCountMixin
-)
+    ProductTypeFilter, ContentLinkMixin, ProductCountMixin)
+from store.services.product_sync import sync_products_host_for_video
 
 
 # 0)Language admin
@@ -122,6 +121,16 @@ class VideoAdmin(SubtitleCountMinxin, ThumbnailMixin, FormattedUpdateDateMixin,
     def genre_title(self, obj):
         return obj.genre.title
     genre_title.short_description = 'Genre'
+
+    # update video host here
+    def save_model(self, request, obj, form, change):
+        # Detect host change BEFORE save
+        host_changed = change and 'host' in form.changed_data
+        # Let admin do its normal save
+        super().save_model(request, obj, form, change)
+        # Sync AFTER save
+        if host_changed:
+            sync_products_host_for_video(obj)
 
 
 # 5)Subtitle admin

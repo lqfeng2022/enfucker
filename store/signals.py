@@ -2,7 +2,7 @@ import os
 from django.db import transaction
 from django.db.models.signals import pre_save, post_save, post_delete
 from django.dispatch import receiver
-from .models import Video, Subtitle, Expression, Product, Host
+from .models import Video, Subtitle, Expression, Product
 
 
 # 1)CREATE/DELETE products
