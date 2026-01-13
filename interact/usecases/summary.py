@@ -8,13 +8,13 @@ from interact.utils.recorder import record_usage
 import logging
 
 logger = logging.getLogger(__name__)
-logger.warning(f"SUMMARY MODULE LOADED FROM {__file__}")  # debug
+logger.debug("SUMMARY MODULE LOADED FROM %s", __file__)
 
 
 def maybe_summarize_session(*, session):
     """Summarize when unsummarized messages >= SUMMARY_WINDOW"""
     # 1)get all messages
-    qs = session.messages.all()
+    qs = session.messages.only('id', 'role', 'content', 'created_at')
 
     # 2)Fetch the target range messages
     if session.summary_upto_message_id:

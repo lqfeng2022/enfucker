@@ -177,6 +177,12 @@ DJOSER = {'SERIALIZERS': {
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{asctime} ({levelname}) - {name} - {message}',
+            'style': '{',
+        }
+    },
     'handlers': {
         'console': {'class': 'logging.StreamHandler'},
         'file': {
@@ -185,17 +191,24 @@ LOGGING = {
             'formatter': 'verbose',
         },
     },
-    'loggers': {
-        '': {
-            'handlers': ['console', 'file'],
-            'level': os.environ.get('DJANGO_LOG_LEVEL', 'INFO'),
-        }
+    'root': {
+        'handlers': ['console', 'file'],
+        'level': os.environ.get('DJANGO_LOG_LEVEL', 'INFO'),
     },
-    'formatters': {
-        'verbose': {
-            'format': '{asctime} ({levelname}) - {name} - {message}',
-            'style': '{',
-        }
+    'loggers': {
+        # Silence noisy infra
+        'celery': {'level': 'WARNING'},
+        'kombu': {'level': 'WARNING'},
+        'amqp': {'level': 'WARNING'},
+        'redis': {'level': 'WARNING'},
+        'urllib3': {'level': 'WARNING'},
+        'requests': {'level': 'WARNING'},
+        # DB spam control
+        'django.db.backends': {'level': 'ERROR'},
+        # Your app stays at INFO
+        'interact': {'level': 'INFO'},
+        'ai': {'level': 'INFO'},
+        'enfucker': {'level': 'INFO'},
     },
 }
 
@@ -203,6 +216,13 @@ LOGGING = {
 # Redis url
 # `/1`: the db name, it could be 2/3.., `1` by convention
 CELERY_BROKER_URL = 'redis://localhost:6379/1'
+
+# Add task time limits:
+# This ensures stuck LLM calls get killed, workers recover automatically
+# Celery raises SoftTimeLimitExceeded inside your task
+CELERY_TASK_SOFT_TIME_LIMIT = 45  # 45 seconds for soft limit
+# Worker force-kills the task if it’s still running
+CELERY_TASK_TIME_LIMIT = 60  # 60 seconds for hard kill limit
 
 
 # Redis cache
