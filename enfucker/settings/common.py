@@ -149,7 +149,7 @@ STORE_HOST_MODEL = 'store.Host'
 STORE_LANGUAGE_MODEL = 'store.Language'
 STORE_CITY_MODEL = 'store.City'
 STORE_PRODUCT_MODEL = 'store.Product'
-DEFAULT_HOST_SLUG = 'lucy'
+DEFAULT_HOST_SLUG = 'lee'
 
 # billing app
 BILLING_PAYMENT_MODEL = 'billing.Payment'
@@ -163,8 +163,8 @@ DEFAULT_STT_MODEL_NAME = 'scribe_v1'
 DEFAULT_TTS_MODEL_NAME = 'eleven_v3'
 
 DEFAULT_BASE_PROMPT_SLUG = 'language-teacher'
-DEFAULT_PERSONA_PROMPT_SLUG = 'lucy'
-DEFAULT_VOICE_SLUG = 'samara'
+DEFAULT_PERSONA_PROMPT_SLUG = 'lee'
+DEFAULT_VOICE_SLUG = 'lee'
 
 
 DJOSER = {'SERIALIZERS': {

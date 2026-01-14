@@ -1,6 +1,7 @@
 from django.db.models import Count, Q
 from django.db import transaction, IntegrityError
 from django.shortcuts import get_object_or_404
+from rest_framework import serializers
 from rest_framework.viewsets import GenericViewSet
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.mixins import (
@@ -11,7 +12,7 @@ from interact.models import ChatSession, ChatMessage
 from interact.serializers.chatsession import (
     ChatSessionAddSerializer, ChatSessionListSerializer, ChatSessionSerializer,
     ChatMessageAddSerializer, ChatMessageUpdateSerializer, ChatMessageSerializer)
-from interact.utils.getmodels import get_product_model, get_default_host
+from interact.utils.getmodels import get_product_model, get_host_model, get_default_host
 
 
 # '/store/product/<pk>/chatsession/'
@@ -56,9 +57,20 @@ class ChatSessionViewSet(ListModelMixin, RetrieveModelMixin, CreateModelMixin,
             order_by('-updated_at')
 
     def perform_create(self, serializer):
-        # serializer.save(user=self.request.user, host=get_default_host())
+        Host = get_host_model()
         user = self.request.user
-        host = get_default_host()
+
+        # Get host from request data if provided, else default
+        host_id = self.request.data.get('host_id')
+        if host_id:
+            try:
+                # replace Host with your actual model if different
+                host = Host.objects.get(id=host_id)
+            except Host.DoesNotExist:
+                raise serializers.ValidationError(
+                    {"host_id": "Invalid host_id provided."})
+        else:
+            host = get_default_host()  # fallback to default
 
         try:
             with transaction.atomic():

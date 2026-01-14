@@ -124,13 +124,14 @@ class ChatSessionListSerializer(serializers.ModelSerializer):
 class ChatSessionSerializer(serializers.ModelSerializer):
     host = HostSimpleSerializer(read_only=True)
     product = ProductChatSerializer(read_only=True)
+    host_id = serializers.IntegerField(write_only=True, required=False)  # NEW
 
     messages = serializers.SerializerMethodField()
 
     class Meta:
         model = ChatSession
         fields = ['id', 'visible', 'created_at', 'updated_at', 'host', 'product',
-                  'messages']
+                  'messages', 'host_id']  # include host_d in fields
 
     def get_messages(self, session):
         qs = session.messages.filter(visible=True).order_by('created_at')

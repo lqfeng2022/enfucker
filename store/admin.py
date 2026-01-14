@@ -78,14 +78,12 @@ class AlphabetAdmin(ExpressionCountMixin, admin.ModelAdmin):
 class HostAdmin(ProductCountMixin, FormattedUpdateDateMixin, admin.ModelAdmin):
     list_display = ['id', 'name', 'slug', 'product_count',
                     'formatted_updated_at']
-    list_per_page = 15
+    list_per_page = 12
     list_filter = ['updated_at']
 
     prepopulated_fields = {'slug': ['name']}
     search_fields = ['name']
     related_field = 'host_id'
-
-    ordering = ['-updated_at']
 
 
 # 4)Video admin
