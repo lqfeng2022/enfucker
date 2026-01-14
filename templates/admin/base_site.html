@@ -1,0 +1,11 @@
+{% extends "admin/base.html" %}
+
+{% block extrastyle %}
+{{ block.super }}
+<style>
+  #result_list a,
+  #changelist-filter a {
+      text-decoration: none !important;
+  }
+</style>
+{% endblock %}
