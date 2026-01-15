@@ -29,6 +29,8 @@ class Profile(AbstractCommon):
     description = models.TextField(blank=True)
     bro = models.BooleanField(default=False)
 
+    description = models.CharField(max_length=255, null=True)
+
     def __str__(self):
         return f'{self.user.first_name} {self.user.last_name}'
 

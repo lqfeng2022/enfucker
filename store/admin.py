@@ -75,7 +75,8 @@ class AlphabetAdmin(ExpressionCountMixin, admin.ModelAdmin):
 
 # 3)Host admin
 @admin.register(Host)
-class HostAdmin(ProductCountMixin, FormattedUpdateDateMixin, admin.ModelAdmin):
+class HostAdmin(ThumbnailMixin, ProductCountMixin, FormattedUpdateDateMixin,
+                admin.ModelAdmin):
     list_display = ['id', 'name', 'slug', 'product_count',
                     'formatted_updated_at']
     list_per_page = 12

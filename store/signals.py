@@ -2,7 +2,7 @@ import os
 from django.db import transaction
 from django.db.models.signals import pre_save, post_save, post_delete
 from django.dispatch import receiver
-from .models import Video, Subtitle, Expression, Product
+from .models import Video, Subtitle, Expression, Product, Host
 
 
 # 1)CREATE/DELETE products
@@ -149,3 +149,39 @@ def cleanup_expimage_on_replace(sender, instance, **kwargs):
 
     if old_file.image != instance.image:
         delete_file_if_changed(old_file.image, instance.image)
+
+
+# 4)Clean unused host images, audios via signals
+@receiver(post_delete, sender=Host)
+def cleanup_expfile_on_delete(sender, instance, **kwargs):
+    if not instance.pk:
+        return  # New object, no old file
+
+    try:
+        old_file = sender.objects.get(pk=instance.pk)
+    except sender.DoesNotExist:
+        return
+
+    delete_file_if_changed(old_file.portrait, instance.portrait)
+    delete_file_if_changed(old_file.cover, instance.cover)
+    delete_file_if_changed(old_file.audio_intro, instance.audio_intro)
+
+
+@receiver(pre_save, sender=Host)
+def cleanup_expfile_on_replace(sender, instance, **kwargs):
+    if not instance.pk:
+        return
+
+    try:
+        old_file = Host.objects.get(pk=instance.pk)
+    except Host.DoesNotExist:
+        return
+
+    if old_file.portrait != instance.portrait:
+        delete_file_if_changed(old_file.portrait, instance.portrait)
+
+    if old_file.cover != instance.cover:
+        delete_file_if_changed(old_file.cover, instance.cover)
+
+    if old_file.audio_intro != instance.audio_intro:
+        delete_file_if_changed(old_file.audio_intro, instance.audio_intro)

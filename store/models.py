@@ -81,6 +81,14 @@ class Host(AbstractCommon):
     name = models.CharField(max_length=255)
     slug = models.SlugField()
 
+    cover = models.ImageField(upload_to='store/image/host-back', null=True)
+    portrait = models.ImageField(upload_to='store/image/host-avatar',
+                                 null=True)
+    audio_intro = models.FileField(upload_to='store/audio/host-intro',
+                                   null=True)
+
+    description = models.CharField(max_length=255, null=True)
+
     def __str__(self) -> str:
         return self.name
 

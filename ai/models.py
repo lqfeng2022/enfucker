@@ -161,10 +161,6 @@ class HostProfile(AbstractCommon):
     host = models.OneToOneField(settings.STORE_HOST_MODEL, on_delete=models.CASCADE,
                                 related_name='host_profile')
 
-    cover = models.ImageField(upload_to='ai/image/host-back', null=True)
-    portrait = models.ImageField(upload_to='ai/image/host-avatar',
-                                 null=True)
-
     base_prompt = models.ForeignKey(BasePrompt, on_delete=models.PROTECT,
                                     related_name='host_profiles')
     persona_prompt = models.ForeignKey(PersonaPrompt, on_delete=models.PROTECT,

@@ -1,9 +1,8 @@
 from django.contrib import admin
-from .mixins.admin import ThumbnailMixin, HostCountMixin
+from .mixins.admin import HostCountMixin
 from .models import (
     BasePrompt, PersonaPrompt, AICompany, HostProfile, AIModel, ModelProvider,
-    Voice, Character
-)
+    Voice, Character)
 
 
 @admin.register(AICompany)
@@ -117,11 +116,11 @@ class PersonaPromptAdmin(HostCountMixin, admin.ModelAdmin):
 
 
 @admin.register(HostProfile)
-class HostProfileAdmin(ThumbnailMixin, admin.ModelAdmin):
+class HostProfileAdmin(admin.ModelAdmin):
     list_display = ['id', 'host__name', 'base_prompt', 'persona_prompt', 'voice',
                     'formatted_updated_at']
     list_per_page = 15
-    list_filter = ['created_at']
+    list_filter = ['created_at', 'base_prompt']
 
     search_fields = ['host__name']
 

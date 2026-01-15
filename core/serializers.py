@@ -35,7 +35,7 @@ class ProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = Profile
         fields = ['id', 'username', 'email', 'first_name', 'last_name',
-                  'phone', 'birth_date', 'bro']
+                  'phone', 'birth_date', 'bro', 'description']
         read_only_fields = ['bro']
 
     def validate_email(self, value):
