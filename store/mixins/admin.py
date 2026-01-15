@@ -15,7 +15,7 @@ class ThumbnailMixin:
     # Define thumbnail() to render the html <img> tag showing cover iamge
     def thumbnail(self, instance):
         thumbnails = []
-        for field in ['cover', 'image', 'portrait']:
+        for field in ['portrait', 'cover', 'image']:
             # getattr() equal to `instance.field` which means file is gonna be instance.image or instance.cover
             # ->handle FileField and raw URLField/CharField cases
             file = getattr(instance, field, None)
