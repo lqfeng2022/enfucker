@@ -1,5 +1,7 @@
+import uuid
 from django.conf import settings
 from django.db import models
+from django.utils import timezone
 from .utils.mediauploadto import chat_audio_upload_to
 
 
@@ -155,6 +157,48 @@ class ChatSession(AbstractCommon):
         ordering = ['-updated_at']
 
 
+# interact_callsession
+class CallSession(models.Model):
+    session = models.ForeignKey(ChatSession, on_delete=models.CASCADE,
+                                related_name='calls')
+
+    # Public identifier (used by frontend & websocket)
+    uuid = models.UUIDField(default=uuid.uuid4, unique=True, editable=False,
+                            db_index=True)
+    ACTIVE = 'active'
+    ENDED = 'ended'
+    TERMINATED = 'terminated'
+    STATE_CHOICES = [(ACTIVE, 'Active'), (ENDED, 'Ended'),
+                     (TERMINATED, 'Terminated'),]
+    state = models.CharField(max_length=12, choices=STATE_CHOICES,
+                             default=ACTIVE)
+
+    started_at = models.DateTimeField(auto_now_add=True)
+    ended_at = models.DateTimeField(null=True, blank=True)
+
+    duration_seconds = models.PositiveIntegerField(default=0)
+    cost = models.DecimalField(max_digits=12, decimal_places=6, default=0)
+
+    summary = models.TextField(blank=True)
+
+    def __str__(self) -> str:
+        return f'CallSession({self.id})'
+
+    def end(self):
+        if self.state != self.ACTIVE:
+            return
+        self.ended_at = timezone.now()
+        self.duration_seconds = int(
+            (self.ended_at - self.started_at).total_seconds()
+        )
+        self.state = self.ENDED
+        self.save(update_fields=['ended_at', 'duration_seconds', 'state'])
+
+    class Meta:
+        verbose_name_plural = 'Call Sessions'
+        ordering = ['-started_at']
+
+
 # interact_chatmessage
 class ChatMessage(models.Model):
     USER = 'user'
@@ -165,6 +209,8 @@ class ChatMessage(models.Model):
     visible = models.BooleanField(default=True)
     session = models.ForeignKey(ChatSession, on_delete=models.CASCADE,
                                 related_name='messages')
+    call_session = models.ForeignKey(CallSession, on_delete=models.PROTECT, null=True,
+                                     blank=True, related_name='messages', editable=False)
 
     role = models.CharField(max_length=10, choices=ROLE_CHOICES)
     content = models.TextField()
@@ -194,22 +240,22 @@ class ModelUsage(models.Model):
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT,
                              related_name='usage_costs', editable=False)
-    session = models.ForeignKey(ChatSession, on_delete=models.PROTECT,
+    message = models.ForeignKey(ChatMessage, null=True, blank=True, on_delete=models.CASCADE,
                                 related_name='usage_costs', editable=False)
-    message = models.ForeignKey(ChatMessage, on_delete=models.CASCADE, null=True, blank=True,
+    session = models.ForeignKey(ChatSession, null=True, blank=True, on_delete=models.PROTECT,
                                 related_name='usage_costs', editable=False)
+
+    call_session = models.ForeignKey(CallSession, null=True, blank=True,  on_delete=models.PROTECT,
+                                     related_name='usage_costs', editable=False)
 
     chat_model = models.ForeignKey(settings.AI_MODELPROVIDER_MODEL, on_delete=models.CASCADE,
                                    related_name='usage_costs')
-
     # Immutable snapshot copied from ModelProvider at creation
     step = models.CharField(max_length=30, db_index=True, editable=False)
-
     unit_price = models.DecimalField(max_digits=12, decimal_places=6,
                                      editable=False)
     units = models.DecimalField(max_digits=12, decimal_places=3,
                                 help_text='1K-tokens, seconds, characters')
-
     cost = models.DecimalField(max_digits=12, decimal_places=6)
 
     def __str__(self) -> str:
@@ -222,16 +268,17 @@ class ModelUsage(models.Model):
                    models.Index(fields=['created_at'])]
 
 
-# ineract_debitledger
+# interact_debitledger
 class DebitLedger(models.Model):
+    created_at = models.DateTimeField(auto_now_add=True)
+
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
                              related_name='credit_ledgers')
-    amount = models.PositiveIntegerField(default=0)
     usage = models.ForeignKey(ModelUsage, null=True, blank=True,
                               on_delete=models.SET_NULL)
 
+    amount = models.PositiveIntegerField(default=0)
     note = models.CharField(max_length=255, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self) -> str:
         return f'{self.amount} credits'

@@ -7,22 +7,36 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-def record_usage(*, session=None, message=None, model=None, units):
+def record_usage(*, session=None, message=None, call_session=None, model=None, units):
     if not message and not session:
         raise ValueError('Either message or session is required')
     if not model:
         raise ValueError('ModelProvider is required')
 
-    # Resolve session
+    # Resolve session for cost aggregation
     if not session and message:
         session = message.session
+    elif not session and call_session:
+        session = call_session.session
 
-    user = session.user  # 🔑 SINGLE SOURCE
+    # Resolve call_session
+    if not call_session and message:
+        call_session = message.call_session
+
+    # Resolve user
+    user = None
+    if session:
+        user = session.user
+    elif message:
+        user = message.session.user
+    elif call_session:
+        user = call_session.session.user
 
     usage = ModelUsage.objects.create(
         user=user,
-        session=session,  # ALWAYS SET
-        message=message,  # optional
+        session=session,            # ALWAYS SET
+        message=message,            # optional
+        call_session=call_session,  # optional
         units=Decimal(units),
         chat_model=model,
         step=f'{model.usecase}-{model.step}',  # snapshot
@@ -30,7 +44,7 @@ def record_usage(*, session=None, message=None, model=None, units):
         cost=Decimal(units) * model.unit_price,
     )
 
-    # Update message cash
+    # Update message cost
     if message:
         message.cost = (
             message.usage_costs.aggregate(total=Sum('cost'))['total']
@@ -38,7 +52,7 @@ def record_usage(*, session=None, message=None, model=None, units):
         )
         message.save(update_fields=['cost'])
 
-    # Update session cash
+    # Update session cost
     if session:
         session.cost = (
             session.usage_costs.aggregate(total=Sum('cost'))['total']
@@ -46,11 +60,18 @@ def record_usage(*, session=None, message=None, model=None, units):
         )
         session.save(update_fields=['cost'])
 
-    # BILLING HOOK
+    # Update call_session cost
+    if call_session:
+        call_session.cost = (
+            call_session.usage_costs.aggregate(total=Sum('cost'))['total']
+            or Decimal('0')
+        )
+        call_session.save(update_fields=['cost'])
+
+    # Billing hook
     try:
         debit_for_usage(usage=usage)
     except ValueError as e:
-        # Only log at a general level if needed
-        logger.info(f"Debit skipped for usage {usage.id}: {e}")
+        logger.info(f'Debit skipped for usage {usage.id}: {e}')
 
     return usage

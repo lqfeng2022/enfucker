@@ -6,6 +6,7 @@ from .views.hostfollow import HostFollowViewSet
 from .views.collection import (
     CollectionViewSet, CollectionItemViewSet, CollectionProductViewSet)
 from .views.chatsession import ChatSessionViewSet, ChatMessageViewSet
+from .views.callsession import CallSessionViewSet
 
 
 router = routers.DefaultRouter()
@@ -18,22 +19,24 @@ router.register('follows', HostFollowViewSet, basename='follows')
 router.register('collections', CollectionViewSet, basename='collections')
 router.register('chatsessions', ChatSessionViewSet, basename='chatsessions')
 
-
 # 2)Nested routers
 # a)'collections/<pk>/items/<item_pk>'
+# b)'collections/<pk>/items/<product_pk>'
 collection_router = routers.NestedDefaultRouter(router, 'collections',
                                                 lookup='collection')
 collection_router.register('items', CollectionItemViewSet,
                            basename='collection-items')
-# b)'collections/<pk>/items/<product_pk>'
 collection_router.register('products', CollectionProductViewSet,
                            basename='collection-products')
 
 # c)'chatsessions/<pk>/messages/<message_pk>'
+# d)'chatsessions/<pk>/calls/<call_pk>'
 chatsession_router = routers.NestedDefaultRouter(router, 'chatsessions',
                                                  lookup='session')
 chatsession_router.register('messages', ChatMessageViewSet,
                             basename='chatsession-messages')
+chatsession_router.register('calls', CallSessionViewSet,
+                            basename='chatsession-calls')
 
 
 urlpatterns = router.urls + collection_router.urls + chatsession_router.urls

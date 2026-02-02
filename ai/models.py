@@ -1,6 +1,6 @@
 from django.db import models
 from django.conf import settings
-from ai.contracts import CHAT, STT, TTS, SUMMARY, ENHANCE
+from ai.contracts import CHAT, STT, REALTIME, TTS, STREAM, SUMMARY, ENHANCE
 
 
 class AbstractCommon(models.Model):
@@ -41,8 +41,15 @@ class AIModel(AbstractCommon):
 
 # ai_modelprovider
 class ModelProvider(AbstractCommon):
-    USECASE_CHOICES = [(STT, 'STT'), (TTS, 'TTS'), (CHAT, 'LLM-Chat'),
-                       (SUMMARY, 'LLM-Summary'), (ENHANCE, 'LLM-Enhance'),]
+    USECASE_CHOICES = [
+        (STT, 'STT'),
+        (REALTIME, 'STT-Realtime'),
+        (TTS, 'TTS'),
+        (STREAM, 'TTS-Stream'),
+        (CHAT, 'LLM-Chat'),
+        (SUMMARY, 'LLM-Summary'),
+        (ENHANCE, 'LLM-Enhance'),
+    ]
 
     TOKENS = 'tokens'
     CHARACTERS = 'characters'
@@ -172,6 +179,10 @@ class HostProfile(AbstractCommon):
                                   related_name='stt_hosts')
     tts_model = models.ForeignKey(AIModel, on_delete=models.PROTECT,
                                   related_name='tts_hosts')
+    realtime_model = models.ForeignKey(AIModel, on_delete=models.PROTECT,
+                                       related_name='realtime_hosts')
+    stream_model = models.ForeignKey(AIModel, on_delete=models.PROTECT,
+                                     related_name='stream_hosts')
 
     voice = models.ForeignKey(Voice, on_delete=models.PROTECT,
                               related_name='host_profiles')

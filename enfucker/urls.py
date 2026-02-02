@@ -9,7 +9,7 @@ admin.site.index_title = 'Admin'
 
 urlpatterns = [
     path('', include('core.urls')),
-    path('admin-9fge0-2fe3/', admin.site.urls),
+    path('admin-9fge02fe3/', admin.site.urls),
     path('store/', include('store.urls')),
     path('interact/', include('interact.urls')),
     path('billing/', include('billing.urls')),

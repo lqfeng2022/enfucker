@@ -25,6 +25,7 @@ redis = "*"
 celery = "*"
 mysqlclient = "*"
 django-redis = "*"
+channels = {extras = ["daphne"], version = "*"}
 
 [dev-packages]
 pytest = "*"
@@ -33,7 +34,6 @@ model-bakery = "*"
 
 [requires]
 python_version = "3.12"
-
 # NOTE:
 # openai is installed manually on the server due to pipenv resolver issues
 # DO NOT remove from server venv

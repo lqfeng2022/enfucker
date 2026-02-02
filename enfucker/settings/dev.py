@@ -36,10 +36,10 @@ ALLOWED_HOSTS = [
 
 
 # disable the cookie in dev mode
-SESSION_COOKIE_DOMAIN = None
-CSRF_COOKIE_DOMAIN = None
+SESSION_COOKIE_DOMAIN = None  # Host-only cookie
+CSRF_COOKIE_DOMAIN = None  # Host-only cookie
 
 # auth
-AUTH_COOKIE_SECURE = False
-AUTH_COOKIE_SAMESITE = 'Lax'
+AUTH_COOKIE_SECURE = False  # HTTP allowed
+AUTH_COOKIE_SAMESITE = 'Lax'  # Cookies sent on same-site WS
 AUTH_COOKIE_DOMAIN = None

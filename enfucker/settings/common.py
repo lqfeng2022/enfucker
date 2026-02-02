@@ -12,6 +12,8 @@ load_dotenv(os.path.join(BASE_DIR, '.env'))
 
 # Application definition
 INSTALLED_APPS = [
+    'daphne',
+    'channels',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -90,6 +92,7 @@ TEMPLATES = [
 
 
 WSGI_APPLICATION = 'enfucker.wsgi.application'
+ASGI_APPLICATION = 'enfucker.asgi.application'
 
 
 # Password validation
@@ -161,6 +164,7 @@ AI_MODELPROVIDER_MODEL = 'ai.ModelProvider'
 DEFAULT_CHAT_MODEL_NAME = 'deepseek-chat'
 DEFAULT_STT_MODEL_NAME = 'scribe_v1'
 DEFAULT_TTS_MODEL_NAME = 'eleven_v3'
+DEFAULT_ELEVENLABS_VOICE_ID = 'jK5Bt9mapTJFvlKvjcII'  # lee(Chinese)
 
 DEFAULT_BASE_PROMPT_SLUG = 'language-teacher'
 DEFAULT_PERSONA_PROMPT_SLUG = 'lee'

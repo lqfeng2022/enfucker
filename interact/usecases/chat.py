@@ -65,6 +65,7 @@ def get_assistant_message(*, session, user_msg: ChatMessage):
     # 5)Persist assistant message
     assistant_msg = ChatMessage.objects.create(
         session=session,
+        call_session=user_msg.call_session,  # 🔥 MUST be here
         role=ChatMessage.ASSISTANT,
         content=response['content'],
         is_voice=False,  # TTS handled separately
