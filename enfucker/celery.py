@@ -1,9 +1,12 @@
-import os
 from celery import Celery
+from dotenv import load_dotenv
 
+# load .env explicitly
+load_dotenv()
 
-# setting this MODULE environment variable to enfucker.settings.dev
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'enfucker.settings.dev')
+# DO NOT hardcode dev/prod here
+# Let systemd or manage.py control it
+# os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'enfucker.settings.dev')
 
 # create a celery instance
 celery = Celery('enfucker')
