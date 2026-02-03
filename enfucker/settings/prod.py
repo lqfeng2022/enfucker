@@ -34,3 +34,13 @@ CSRF_COOKIE_DOMAIN = '.clipwords.me'
 AUTH_COOKIE_SECURE = True
 AUTH_COOKIE_SAMESITE = 'None'
 AUTH_COOKIE_DOMAIN = '.clipwords.me'
+
+
+# Trust Nginx as HTTPS proxy
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+# Add it after config nginx + asgi(daphne) on server
+CSRF_TRUSTED_ORIGINS = [
+    'https://clipwords.me',
+    'https://www.clipwords.me',
+]
