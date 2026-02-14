@@ -13,3 +13,17 @@ def expression_image_upload_to(instance, filename):
     safe_filename = f'{base}{ext}'
 
     return f'store/image/expression/{video_slug}/{safe_filename}'
+
+
+def video_upload_to(instance, filename):
+    """Upload to 'store/video/<host.slug>/<filename>'."""
+    if instance.host:
+        host_slug = instance.host.slug
+    else:
+        host_slug = 'no_host'
+
+    # Clean filename to avoid weird characters
+    base, ext = os.path.splitext(filename)
+    safe_filename = f'{base}{ext}'
+
+    return f'store/video/{host_slug}/{safe_filename}'

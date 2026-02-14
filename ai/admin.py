@@ -80,7 +80,7 @@ class BasePromptAdmin(HostCountMixin, admin.ModelAdmin):
     list_display = ['id', 'name', 'slug', 'version', 'is_active', 'host_count',
                     'formatted_created_at', 'formatted_updated_at']
     list_per_page = 15
-    list_filter = ['created_at']
+    list_filter = ['updated_at']
 
     related_field = 'baseprompt_id'
     search_fields = ['name']
@@ -100,7 +100,7 @@ class PersonaPromptAdmin(HostCountMixin, admin.ModelAdmin):
     list_display = ['id', 'name', 'role', 'is_active', 'host_count',
                     'formatted_created_at', 'formatted_updated_at']
     list_per_page = 15
-    list_filter = ['created_at']
+    list_filter = ['updated_at']
 
     related_field = 'personaprompt_id'
     search_fields = ['name']

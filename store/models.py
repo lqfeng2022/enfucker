@@ -1,6 +1,6 @@
 from django.db import models
 from django.core.validators import MinValueValidator
-from .utils import expression_image_upload_to
+from .utils import expression_image_upload_to, video_upload_to
 
 
 class AbstractCommon(models.Model):
@@ -115,11 +115,11 @@ class Video(AbstractCommon):
     slug = models.SlugField()
     released_year = models.IntegerField(validators=[MinValueValidator(1888)],
                                         blank=True)
-    original = models.CharField(max_length=255)
+    original = models.CharField(max_length=255, blank=True)
     website = models.URLField(blank=True)
 
     cover = models.ImageField(upload_to='store/image/clip-cover', blank=True)
-    file = models.FileField(upload_to='store/video', blank=True)
+    file = models.FileField(upload_to=video_upload_to, blank=True)
     context = models.TextField(blank=True)
 
     def __str__(self) -> str:
@@ -146,8 +146,9 @@ class Subtitle(AbstractCommon):
 
 # store_expression
 class Expression(AbstractCommon):
-    subtitle = models.ForeignKey(Subtitle, on_delete=models.PROTECT, blank=True,
+    subtitle = models.ForeignKey(Subtitle, on_delete=models.CASCADE,
                                  related_name='expressions')
+
     alphabet = models.ForeignKey(Alphabet, on_delete=models.PROTECT,
                                  related_name='expressions')
 
@@ -175,12 +176,14 @@ class Product(AbstractCommon):
 
     host = models.ForeignKey(Host, on_delete=models.PROTECT,
                              related_name='products')
+
     video = models.OneToOneField(Video, null=True, blank=True,
                                  on_delete=models.CASCADE)
     subtitle = models.OneToOneField(Subtitle, null=True, blank=True,
                                     on_delete=models.CASCADE)
     expression = models.OneToOneField(Expression, null=True, blank=True,
                                       on_delete=models.CASCADE)
+
     parent = models.ForeignKey('self', null=True, blank=True,
                                related_name='children', on_delete=models.SET_NULL)
 
