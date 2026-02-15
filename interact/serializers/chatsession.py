@@ -82,7 +82,8 @@ class ChatMessageSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ChatMessage
-        fields = ['id', 'role', 'content', 'audio', 'created_at']
+        fields = ['id', 'role', 'content', 'audio', 'audio_seconds',
+                  'created_at']
 
 
 # ChatSession serializers
