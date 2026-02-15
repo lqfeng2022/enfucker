@@ -126,15 +126,15 @@ class ChatSessionSerializer(serializers.ModelSerializer):
     product = ProductChatSerializer(read_only=True)
     host_id = serializers.IntegerField(write_only=True, required=False)  # NEW
 
-    messages = serializers.SerializerMethodField()
+    # messages = serializers.SerializerMethodField()
 
     class Meta:
         model = ChatSession
         fields = ['id', 'visible', 'created_at', 'updated_at', 'host', 'product',
-                  'messages', 'host_id']  # include host_d in fields
+                  'host_id']  # include host_id in fields
 
-    def get_messages(self, session):
-        qs = session.messages.filter(visible=True).order_by('created_at')
-        # ADD `context=self.context`,
-        # pass this serializer the context, so it contains request from viewset
-        return ChatMessageSerializer(qs, many=True, context=self.context).data
+    # def get_messages(self, session):
+    #     qs = session.messages.filter(visible=True).order_by('created_at')
+    #     # ADD `context=self.context`,
+    #     # pass this serializer the context, so it contains request from viewset
+    #     return ChatMessageSerializer(qs, many=True, context=self.context).data
