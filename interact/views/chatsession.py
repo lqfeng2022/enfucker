@@ -4,6 +4,7 @@ from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 from rest_framework.viewsets import GenericViewSet
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.filters import OrderingFilter
 from rest_framework.mixins import (
     ListModelMixin, RetrieveModelMixin, UpdateModelMixin, CreateModelMixin,
     DestroyModelMixin)
@@ -102,6 +103,10 @@ class ChatSessionViewSet(ListModelMixin, RetrieveModelMixin, CreateModelMixin,
 class ChatMessageViewSet(ListModelMixin, CreateModelMixin, RetrieveModelMixin,
                          UpdateModelMixin, DestroyModelMixin, GenericViewSet):
     permission_classes = [IsAuthenticated, AdminDelete]
+
+    filter_backends = [OrderingFilter]
+    ordering_fields = ['created_at']
+    ordering = ['-created_at']  # default API ordering
 
     def get_serializer_class(self):
         if self.action == 'create':
