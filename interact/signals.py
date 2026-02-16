@@ -9,7 +9,7 @@ from .models import Like, UserView, CollectionItem, ChatMessage
 @receiver(post_save, sender=ChatMessage)
 def update_latest_chat(sender, instance, **kwargs):
     session = instance.session
-    content = f' {'[voice]' if instance.is_voice else ''}{instance.content}'
+    content = f'{instance.content}'
 
     session.latest_chat = content
     session.save(update_fields=['latest_chat'])
