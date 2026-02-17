@@ -20,7 +20,7 @@ class AlphabetSerializer(serializers.ModelSerializer):
 
 
 class VideoSerializer(serializers.ModelSerializer):
-    genre = GenreSerializer()
+    genre = serializers.StringRelatedField()
 
     class Meta:
         model = Video

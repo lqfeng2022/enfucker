@@ -4,7 +4,7 @@ from interact.views.like import LikeAddViewSet, LikeProductViewSet
 from interact.views.chatsession import ChatSessionAddViewSet
 from interact.views.hostfollow import HostFollowAddViewSet, HostFollowedViewSet, HostFollowedProductsViewSet
 from interact.views.collection import BookmarkedProductViewSet
-from .views import feed, host, product, relevant, views
+from .views import feed, host, product, relevant, views, playlist
 
 
 # Create parent routers, like 'store/videos/'...
@@ -18,6 +18,7 @@ router.register('followed-hosts', HostFollowedViewSet,
 
 router.register('feed', feed.FeedViewSet, basename='feed')
 
+router.register('playlists', playlist.PlaylistViewSet, basename='playlist')
 router.register('products', product.ProductViewSet, basename='product')
 router.register('viewed-products', UserViewProductViewSet,
                 basename='viewed-products')

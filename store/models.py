@@ -1,6 +1,6 @@
 from django.db import models
 from django.core.validators import MinValueValidator
-from .utils import expression_image_upload_to, video_upload_to
+from .utils import expression_image_upload_to, video_upload_to, short_uuid
 
 
 class AbstractCommon(models.Model):
@@ -231,11 +231,26 @@ class Playlist(AbstractCommon):
     title = models.CharField(max_length=255)
     slug = models.SlugField(db_index=True)  # important for API lookup
 
+    short_uuid = models.CharField(max_length=22, unique=True, editable=False,
+                                  default=short_uuid)
+
     products = models.ManyToManyField(Product, through='PlaylistItem',
                                       related_name='playlists')
 
     def __str__(self) -> str:
         return f'{self.title}'
+
+    def get_first_product_thumbnail(self):
+        first_item = self.playlist_items.order_by('order'). \
+            select_related('product__video',
+                           'product__expression',
+                           'product__subtitle'). \
+            prefetch_related('product__subtitle__expressions').first()
+
+        if first_item and first_item.product:
+            return first_item.product.get_thumbnail_url()
+
+        return None
 
     class Meta:
         unique_together = [('host', 'slug')]

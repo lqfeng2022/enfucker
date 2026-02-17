@@ -10,9 +10,11 @@ from store.serializers.product import ProductSerializer
 from interact.utils.decorators import RetryOnDeadlock
 from interact.utils.annotates import annotate_state_for_product
 from interact.utils.getmodels import get_product_model
-from interact.models import Collection, CollectionItem
+from interact.models import Collection, CollectionItem, SavedPlaylist
 from interact.serializers.collection import (
-    CollectionSerializer, CollectionUpdateSerializer, CollectionItemSerializer, CollectionItemAddSerializer)
+    CollectionSerializer, CollectionUpdateSerializer, CollectionItemSerializer,
+    CollectionItemAddSerializer, SavedPlaylistSerializer, SavedPlaylistCreateSerializer
+)
 
 
 # '/interact/collection/<pk>'
@@ -28,8 +30,11 @@ class CollectionViewSet(ModelViewSet):
         user = self.request.user
         queryset = Collection.objects.filter(user_id=user.id). \
             prefetch_related(
-                'items__product', 'items__product__host', 'items__product__video',
-                'items__product__expression', 'items__product__subtitle',
+                'items__product',
+                'items__product__host',
+                'items__product__video',
+                'items__product__expression',
+                'items__product__subtitle',
                 'items__product__subtitle__expressions'
         )
         return queryset
@@ -82,8 +87,12 @@ class CollectionItemViewSet(ListModelMixin, CreateModelMixin, RetrieveModelMixin
 
         queryset = CollectionItem.objects. \
             filter(collection__user=user, collection_id=collection). \
-            select_related('product__host', 'product__expression',
-                           'product__video', 'product__subtitle')
+            select_related(
+                'product__host',
+                'product__expression',
+                'product__video',
+                'product__subtitle'
+            )
         return queryset
 
     def get_serializer_context(self):
@@ -139,7 +148,9 @@ class BookmarkedProductViewSet(ListModelMixin, GenericViewSet):
 
         queryset = (
             Product.objects.
-            select_related('host', 'video', 'subtitle', 'expression', 'video__genre').
+            select_related(
+                'host', 'video', 'subtitle', 'expression', 'video__genre'
+            ).
             prefetch_related('subtitle__expressions').
             filter(items__collection__user=user, items__visible=True).
             annotate(latest_bookmark=Max('items__updated_at'))
@@ -147,3 +158,29 @@ class BookmarkedProductViewSet(ListModelMixin, GenericViewSet):
 
         queryset = annotate_state_for_product(queryset, user)
         return queryset.order_by('-latest_bookmark')
+
+
+class SavedPlaylistViewSet(ListModelMixin, RetrieveModelMixin, CreateModelMixin,
+                           DestroyModelMixin, GenericViewSet):
+    permission_classes = [IsAuthenticated]
+
+    def get_serializer_class(self):
+        if self.action == 'create':
+            return SavedPlaylistCreateSerializer
+        return SavedPlaylistSerializer
+
+    def get_queryset(self):
+        # show only current user's saved playlists
+        return SavedPlaylist.objects. \
+            filter(user=self.request.user). \
+            select_related('playlist', 'playlist__host'). \
+            prefetch_related(
+                'playlist__playlist_items__product__host',
+                'playlist__playlist_items__product__video',
+                'playlist__playlist_items__product__video__genre',
+                'playlist__playlist_items__product__expression',
+                'playlist__playlist_items__product__subtitle__expressions',
+            )
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)

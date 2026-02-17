@@ -1,4 +1,6 @@
 import os
+import uuid
+import base64
 
 
 def expression_image_upload_to(instance, filename):
@@ -27,3 +29,10 @@ def video_upload_to(instance, filename):
     safe_filename = f'{base}{ext}'
 
     return f'store/video/{host_slug}/{safe_filename}'
+
+
+def short_uuid():
+    # Generate UUID4 and encode in URL-safe base64 without padding
+    u = uuid.uuid4()
+    # urlsafe_b64encode returns bytes, decode to str, strip trailing '='
+    return base64.urlsafe_b64encode(u.bytes).rstrip(b'=').decode('ascii')

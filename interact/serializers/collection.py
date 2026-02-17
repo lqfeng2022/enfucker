@@ -1,7 +1,9 @@
 from django.utils import text
 from rest_framework import serializers
 from store.serializers.product import ProductListSerializer
-from interact.models import Collection, CollectionItem
+from store.serializers.playlist import PlaylistSimpleSerializer
+from store.models import Playlist
+from interact.models import Collection, CollectionItem, SavedPlaylist
 from interact.utils.getmodels import get_product_model
 
 
@@ -72,3 +74,22 @@ class CollectionSerializer(serializers.ModelSerializer):
         validated_data['slug'] = text.slugify(title)
 
         return Collection.objects.create(user_id=user, **validated_data)
+
+
+class SavedPlaylistCreateSerializer(serializers.ModelSerializer):
+    # accept playlist ID from user
+    playlist = serializers.PrimaryKeyRelatedField(
+        queryset=Playlist.objects.all()
+    )
+
+    class Meta:
+        model = SavedPlaylist
+        fields = ['playlist']
+
+
+class SavedPlaylistSerializer(serializers.ModelSerializer):
+    playlist = PlaylistSimpleSerializer(read_only=True)
+
+    class Meta:
+        model = SavedPlaylist
+        fields = ['id', 'playlist', 'saved_at']

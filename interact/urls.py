@@ -4,7 +4,9 @@ from .views.history import UserViewViewSet
 from .views.like import LikeViewSet
 from .views.hostfollow import HostFollowViewSet
 from .views.collection import (
-    CollectionViewSet, CollectionItemViewSet, CollectionProductViewSet)
+    CollectionViewSet, CollectionItemViewSet, CollectionProductViewSet,
+    SavedPlaylistViewSet
+)
 from .views.chatsession import ChatSessionViewSet, ChatMessageViewSet
 from .views.callsession import CallSessionViewSet
 
@@ -17,6 +19,8 @@ router.register('views', UserViewViewSet, basename='views')
 router.register('likes', LikeViewSet, basename='likes')
 router.register('follows', HostFollowViewSet, basename='follows')
 router.register('collections', CollectionViewSet, basename='collections')
+router.register('saved-playlists', SavedPlaylistViewSet,
+                basename='savedplaylists')
 router.register('chatsessions', ChatSessionViewSet, basename='chatsessions')
 
 # 2)Nested routers

@@ -202,18 +202,22 @@ class PlaylistItemInline(ProductThumbnailAdminMixin, admin.StackedInline):
     autocomplete_fields = ['product']
     readonly_fields = ['product_thumbnail']
 
+    ordering = ['order']
+
     extra = 0
     min_num = 0
     max_num = 10
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
-        return qs.select_related(
+        queryset = qs.select_related(
             'product',
             'product__video',
             'product__expression',
             'product__subtitle',
         ).prefetch_related('product__subtitle__expressions')
+
+        return queryset
 
 
 @admin.register(Playlist)
