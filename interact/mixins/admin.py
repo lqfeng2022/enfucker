@@ -70,3 +70,11 @@ class HostLinkMixin:
         content = obj.host.name if obj.host else ''
         return format_html("<a href='{}'>{}</a>", url, content)
     host_link.short_description = 'host'
+
+
+class PlaylistLinkMixin:
+    @admin.display(description='Playlist')
+    def playlist_link(self, obj):
+        url = (reverse('admin:store_playlist_changelist') + '?'
+               + urlencode({'id': obj.playlist_id}))
+        return format_html("<a href='{}'>{}</a>", url, obj.playlist.title)

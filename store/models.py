@@ -204,5 +204,56 @@ class Product(AbstractCommon):
         # fallback — should never happen if your data is clean
         return f'Product {self.pk}'
 
+    def get_thumbnail_url(self):
+        if self.type == self.PRODUCT_VIDEO and self.video and self.video.cover:
+            return self.video.cover.url
+
+        if self.type == self.PRODUCT_EXPRESSION and self.expression and self.expression.image:
+            return self.expression.image.url
+
+        if self.type == self.PRODUCT_SUBTITLE and self.subtitle:
+            # first expression image
+            first_expression = self.subtitle.expressions.first()
+            if first_expression and first_expression.image:
+                return first_expression.image.url
+
+        return None
+
     class Meta:
         ordering = ['-updated_at']
+
+
+# store_playlist
+class Playlist(AbstractCommon):
+    host = models.ForeignKey(Host, on_delete=models.CASCADE,
+                             related_name='playlists')
+
+    title = models.CharField(max_length=255)
+    slug = models.SlugField(db_index=True)  # important for API lookup
+
+    products = models.ManyToManyField(Product, through='PlaylistItem',
+                                      related_name='playlists')
+
+    def __str__(self) -> str:
+        return f'{self.title}'
+
+    class Meta:
+        unique_together = [('host', 'slug')]
+        ordering = ['-created_at']
+
+
+# store_playlistitem
+class PlaylistItem(AbstractCommon):
+    order = models.PositiveIntegerField(default=0, db_index=True)
+
+    playlist = models.ForeignKey(Playlist, on_delete=models.CASCADE,
+                                 related_name='playlist_items')
+    product = models.ForeignKey(Product, on_delete=models.CASCADE,
+                                related_name='playlist_items')
+
+    def __str__(self) -> str:
+        return f'{self.product}'
+
+    class Meta:
+        unique_together = [('playlist', 'product'), ('playlist', 'order')]
+        ordering = ['order']

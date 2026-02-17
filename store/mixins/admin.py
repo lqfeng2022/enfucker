@@ -30,6 +30,23 @@ class ThumbnailMixin:
         css = {'all': ['store/styles.css']}
 
 
+class ProductThumbnailAdminMixin:
+    def product_thumbnail(self, obj):
+        if not obj or not getattr(obj, 'product', None):
+            return '-'
+
+        url = obj.product.get_thumbnail_url()
+        if not url:
+            return '-'
+
+        return format_html(
+            '<img src="{}" style="height: 200px; border-radius: 6px;" />',
+            url
+        )
+
+    product_thumbnail.short_description = 'Thumbnail'
+
+
 class VideoCountMixin:
     """Mixin to add a video_count column with a link to the Video changelist page."""
     @admin.display(ordering='video_count', description='Videos')
@@ -119,7 +136,18 @@ class FormattedUpdateDateMixin:
     formatted_updated_at.short_description = 'Updated At'
 
 
+class FormattedSavedDateMixin:
+    date_field = 'saved_at'  # default field name
+    date_format = '%b %d, %Y'  # default formatting
+
+    def formatted_saved_at(self, obj):
+        value = getattr(obj, self.date_field, None)
+        return '_' if not value else value.strftime(self.date_format)
+    formatted_saved_at.short_description = 'Saved At'
+
 # Custom product type filter
+
+
 class ProductTypeFilter(admin.SimpleListFilter):
     # `gettext_lazy as _`: Lazy Translation
     # - The translation is deferred until the string is actually used.
@@ -166,3 +194,23 @@ class ProductCountMixin:
     def get_queryset(self, request):
         return super().get_queryset(request) \
             .annotate(product_count=Count('products', distinct=True))
+
+
+class PlaylistLinkMixin:
+    @admin.display(description='Playlist')
+    def playlist_link(self, obj):
+        url = (reverse('admin:store_playlist_changelist') + '?'
+               + urlencode({'id': obj.playlist_id}))
+        return format_html("<a href='{}'>{}</a>", url, obj.playlist.title)
+
+
+class PlaylistItemCountMinxin:
+    @admin.display(ordering='items_count', description='PlaylistItems')
+    def items_count(self, obj):
+        url = (reverse('admin:store_playlistitem_changelist') + '?'
+               + urlencode({self.related_field: str(obj.id)}))
+        return format_html("<a href='{}'>{}</a>", url, obj.items_count)
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).annotate(
+            items_count=Count('playlist_items', distinct=True))

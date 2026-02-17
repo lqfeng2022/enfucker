@@ -1,11 +1,14 @@
 from django.contrib import admin
 from .models import (
     Country, City, Language, Genre, Alphabet, Video, Subtitle, Expression,
-    Product, Host)
+    Product, Host, Playlist, PlaylistItem)
 from .mixins.admin import (
     ThumbnailMixin, VideoCountMixin, VideoLinkMixin, SubtitleCountMinxin,
     SubtitleLinkMixin, ExpressionCountMixin, FormattedUpdateDateMixin,
-    ProductTypeFilter, ContentLinkMixin, ProductCountMixin)
+    FormattedCreateDateMixin, ProductTypeFilter, ContentLinkMixin,
+    ProductCountMixin, PlaylistItemCountMinxin, PlaylistLinkMixin,
+    ProductThumbnailAdminMixin
+)
 from store.services.product_sync import sync_products_host_for_video
 
 
@@ -189,3 +192,51 @@ class ProductAdmin(FormattedUpdateDateMixin, ContentLinkMixin, admin.ModelAdmin)
                      'expression__title']
 
     ordering = ['id']
+
+
+# 8)Playlist, PlaylistItem admins
+# A)Playlist admin
+class PlaylistItemInline(ProductThumbnailAdminMixin, admin.StackedInline):
+    model = PlaylistItem
+
+    autocomplete_fields = ['product']
+    readonly_fields = ['product_thumbnail']
+
+    extra = 0
+    min_num = 0
+    max_num = 10
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        return qs.select_related(
+            'product',
+            'product__video',
+            'product__expression',
+            'product__subtitle',
+        ).prefetch_related('product__subtitle__expressions')
+
+
+@admin.register(Playlist)
+class PlaylistAdmin(PlaylistItemCountMinxin, FormattedCreateDateMixin,
+                    admin.ModelAdmin):
+    inlines = [PlaylistItemInline]
+
+    list_display = ['id', 'host__name', 'title', 'slug', 'items_count',
+                    'formatted_created_at']
+    list_per_page = 15
+    list_filter = ['created_at']
+
+    prepopulated_fields = {'slug': ['title']}
+    related_field = 'playlist_id'
+
+
+# B)PlaylistItem admin
+@admin.register(PlaylistItem)
+class PlaylistItemAdmin(PlaylistLinkMixin, FormattedCreateDateMixin,
+                        admin.ModelAdmin):
+    list_display = ['id', 'order', 'product', 'playlist_link',
+                    'formatted_created_at']
+    list_per_page = 15
+    list_filter = ['product__type', 'created_at']
+
+    autocomplete_fields = ['product']

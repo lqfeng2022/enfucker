@@ -2,7 +2,9 @@ from django.contrib import admin
 from interact.mixins.admin import (
     ChatMessageCountMinxin, ChatSessionLinkMixin, CollectionItemCountMinxin,
     CollectionLinkMixin, is_english_like_prefix)
-from store.mixins.admin import FormattedCreateDateMixin, FormattedUpdateDateMixin
+from store.mixins.admin import (
+    FormattedCreateDateMixin, FormattedUpdateDateMixin, FormattedSavedDateMixin,
+    PlaylistLinkMixin)
 from .mixins.admin import AudioThumbnailMixin
 from . import models
 
@@ -79,6 +81,14 @@ class CollectionItemAdmin(CollectionLinkMixin, FormattedCreateDateMixin,
     list_filter = ['product__type', 'created_at']
 
     autocomplete_fields = ['product']
+
+
+# 6)SavedPlaylist Admin
+@admin.register(models.SavedPlaylist)
+class SavedPlaylistAdmin(PlaylistLinkMixin, FormattedSavedDateMixin, admin.ModelAdmin):
+    list_display = ['id', 'user', 'playlist_link', 'formatted_saved_at']
+    list_per_page = 15
+    list_filter = ['saved_at']
 
 
 # 5)ChatSession, Chatmessage admins
