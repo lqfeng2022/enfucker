@@ -7,8 +7,8 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.mixins import (
     ListModelMixin, RetrieveModelMixin, CreateModelMixin, DestroyModelMixin
 )
-from store.serializers.product import ProductSerializer
 from store.models import Playlist
+from store.serializers.product import ProductSerializer
 from interact.utils.decorators import RetryOnDeadlock
 from interact.utils.annotates import annotate_state_for_product
 from interact.utils.getmodels import get_product_model

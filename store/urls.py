@@ -4,24 +4,26 @@ from interact.views.like import LikeAddViewSet, LikeProductViewSet
 from interact.views.chatsession import ChatSessionAddViewSet
 from interact.views.hostfollow import HostFollowAddViewSet, HostFollowedViewSet, HostFollowedProductsViewSet
 from interact.views.collection import BookmarkedProductViewSet
-from .views import feed, host, product, relevant, views, playlist
+from .views.playlist import PlaylistProductViewSet, PlaylistViewSet
+from .views.product import ProductViewSet, FeedViewSet, RelevantViewSet
+from .views.host import HostViewSet, AlphabetViewSet, GenreViewSet
 
 
 # Create parent routers, like 'store/videos/'...
 router = routers.DefaultRouter()
 
-router.register('alphabets', views.AlphabetViewSet)
-router.register('genres', views.GenreViewSet)
+router.register('alphabets', AlphabetViewSet)
+router.register('genres', GenreViewSet)
 
-router.register('hosts', host.HostViewSet, basename='host')
+router.register('hosts', HostViewSet, basename='host')
 router.register('followed-hosts', HostFollowedViewSet,
                 basename='followed-hosts')
 
-router.register('feed', feed.FeedViewSet, basename='feed')
+router.register('feed', FeedViewSet, basename='feed')
 
-router.register('playlists', playlist.PlaylistViewSet, basename='playlist')
+router.register('playlists', PlaylistViewSet, basename='playlist')
 
-router.register('products', product.ProductViewSet, basename='product')
+router.register('products', ProductViewSet, basename='product')
 
 router.register('viewed-products', UserViewProductViewSet,
                 basename='viewed-products')
@@ -40,15 +42,15 @@ product_router.register('view', UserViewAddViewSet, basename='product-view')
 product_router.register('like', LikeAddViewSet, basename='product-like')
 product_router.register('chatsession', ChatSessionAddViewSet,
                         basename='product-chatsessions')
-product_router.register('relevants', relevant.RelevantViewSet,
+product_router.register('relevants', RelevantViewSet,
                         basename='product-relevants')
 
 
-# store/playlists/<short_uuid>/items/
+# store/playlists/<short_uuid>/products/
 playlist_router = routers.NestedDefaultRouter(router, 'playlists',
                                               lookup='playlist')
-playlist_router.register('items', playlist.PlaylistItemViewSet,
-                         basename='playlist-items')
+playlist_router.register('products', PlaylistProductViewSet,
+                         basename='playlist-products')
 
 
 host_router = routers.NestedDefaultRouter(router, 'hosts', lookup='host')

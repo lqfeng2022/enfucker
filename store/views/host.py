@@ -3,9 +3,10 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import AllowAny
+from django.db.models import Count
 from interact.utils.annotates import annotate_follow_for_host, annotate_counts_for_host
-from store.models import Host
-from store.serializers.host import HostSerializer
+from store.models import Host, Genre, Alphabet
+from store.serializers.host import HostSerializer, GenreSerializer, AlphabetSerializer
 import logging
 
 logger = logging.getLogger(__name__)  # store.view
@@ -35,3 +36,22 @@ class HostViewSet(ReadOnlyModelViewSet):
             return Response(
                 {'detail': 'Not found.'}, status=status.HTTP_404_NOT_FOUND
             )
+
+
+# '/store/genres'
+class GenreViewSet(ReadOnlyModelViewSet):
+    queryset = Genre.objects. \
+        annotate(videos_count=Count('videos')).all()
+
+    # serializer = GenreSerializer(queryset, many=True) # a list of genres
+    # genre = get_object_or_404(Genre.objects.annotate(videos_count=Count('videos')), pk=id)
+    # serializer = GenreSerializer(genre)
+    serializer_class = GenreSerializer
+
+
+# '/store/alphabets'
+class AlphabetViewSet(ReadOnlyModelViewSet):
+    queryset = Alphabet.objects. \
+        annotate(expressions_count=Count('expressions')).all()
+
+    serializer_class = AlphabetSerializer

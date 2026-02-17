@@ -9,15 +9,15 @@ class ProductContentMixin:
 
     def get_content(self, obj):
         if obj.type == Product.PRODUCT_VIDEO and obj.video:
-            from store.serializers.serializer import VideoSerializer
+            from store.serializers.host import VideoSerializer
             return VideoSerializer(obj.video, context=self.context).data
 
         if obj.type == Product.PRODUCT_EXPRESSION and obj.expression:
-            from store.serializers.serializer import ExpressionSerializer
+            from store.serializers.host import ExpressionSerializer
             return ExpressionSerializer(obj.expression, context=self.context).data
 
         if obj.type == Product.PRODUCT_SUBTITLE and obj.subtitle:
-            from store.serializers.serializer import SubtitleSerializer
+            from store.serializers.host import SubtitleSerializer
             return SubtitleSerializer(obj.subtitle, context=self.context).data
 
         return None
