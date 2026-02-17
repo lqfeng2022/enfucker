@@ -222,16 +222,18 @@ class PlaylistItemInline(ProductThumbnailAdminMixin, admin.StackedInline):
 
 @admin.register(Playlist)
 class PlaylistAdmin(PlaylistItemCountMinxin, FormattedCreateDateMixin,
-                    admin.ModelAdmin):
+                    FormattedUpdateDateMixin, admin.ModelAdmin):
     inlines = [PlaylistItemInline]
 
-    list_display = ['id', 'host__name', 'title', 'slug', 'items_count',
-                    'formatted_created_at']
+    list_display = ['id', 'host__name', 'title', 'items_count',
+                    'formatted_created_at', 'formatted_updated_at']
     list_per_page = 15
     list_filter = ['created_at']
 
     prepopulated_fields = {'slug': ['title']}
     related_field = 'playlist_id'
+
+    ordering = ['id']
 
 
 # B)PlaylistItem admin
@@ -244,3 +246,5 @@ class PlaylistItemAdmin(PlaylistLinkMixin, FormattedCreateDateMixin,
     list_filter = ['product__type', 'created_at']
 
     autocomplete_fields = ['product']
+
+    ordering = ['id']

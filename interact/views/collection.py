@@ -1,19 +1,21 @@
-from django.db.models import Max
+from django.db.models import Max, Count, Prefetch
 from rest_framework import status
 from rest_framework.viewsets import ModelViewSet, GenericViewSet
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.mixins import (
-    ListModelMixin, RetrieveModelMixin, CreateModelMixin, DestroyModelMixin)
+    ListModelMixin, RetrieveModelMixin, CreateModelMixin, DestroyModelMixin
+)
 from store.serializers.product import ProductSerializer
+from store.models import Playlist
 from interact.utils.decorators import RetryOnDeadlock
 from interact.utils.annotates import annotate_state_for_product
 from interact.utils.getmodels import get_product_model
 from interact.models import Collection, CollectionItem, SavedPlaylist
 from interact.serializers.collection import (
     CollectionSerializer, CollectionUpdateSerializer, CollectionItemSerializer,
-    CollectionItemAddSerializer, SavedPlaylistSerializer, SavedPlaylistCreateSerializer
+    CollectionItemAddSerializer, SavedPlaylistSerializer, SavedPlaylistAddSerializer
 )
 
 
@@ -166,21 +168,21 @@ class SavedPlaylistViewSet(ListModelMixin, RetrieveModelMixin, CreateModelMixin,
 
     def get_serializer_class(self):
         if self.action == 'create':
-            return SavedPlaylistCreateSerializer
+            return SavedPlaylistAddSerializer
         return SavedPlaylistSerializer
 
     def get_queryset(self):
-        # show only current user's saved playlists
+        annotated_playlists = Playlist.objects. \
+            annotate(items_count=Count('playlist_items')). \
+            select_related('host')
         return SavedPlaylist.objects. \
             filter(user=self.request.user). \
-            select_related('playlist', 'playlist__host'). \
             prefetch_related(
-                'playlist__playlist_items__product__host',
-                'playlist__playlist_items__product__video',
-                'playlist__playlist_items__product__video__genre',
-                'playlist__playlist_items__product__expression',
-                'playlist__playlist_items__product__subtitle__expressions',
+                Prefetch('playlist', queryset=annotated_playlists)
             )
 
     def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
+        SavedPlaylist.objects.get_or_create(
+            user=self.request.user,
+            playlist=serializer.validated_data['playlist']
+        )

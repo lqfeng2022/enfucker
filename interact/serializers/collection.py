@@ -1,7 +1,7 @@
 from django.utils import text
 from rest_framework import serializers
 from store.serializers.product import ProductListSerializer
-from store.serializers.playlist import PlaylistSimpleSerializer
+from store.serializers.playlist import PlaylistSerializer
 from store.models import Playlist
 from interact.models import Collection, CollectionItem, SavedPlaylist
 from interact.utils.getmodels import get_product_model
@@ -76,9 +76,10 @@ class CollectionSerializer(serializers.ModelSerializer):
         return Collection.objects.create(user_id=user, **validated_data)
 
 
-class SavedPlaylistCreateSerializer(serializers.ModelSerializer):
-    # accept playlist ID from user
-    playlist = serializers.PrimaryKeyRelatedField(
+class SavedPlaylistAddSerializer(serializers.ModelSerializer):
+    # accept playlist `short_uuid` from user
+    playlist = serializers.SlugRelatedField(
+        slug_field='short_uuid',
         queryset=Playlist.objects.all()
     )
 
@@ -88,7 +89,7 @@ class SavedPlaylistCreateSerializer(serializers.ModelSerializer):
 
 
 class SavedPlaylistSerializer(serializers.ModelSerializer):
-    playlist = PlaylistSimpleSerializer(read_only=True)
+    playlist = PlaylistSerializer(read_only=True)
 
     class Meta:
         model = SavedPlaylist

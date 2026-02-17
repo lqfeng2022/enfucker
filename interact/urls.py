@@ -13,7 +13,7 @@ from .views.callsession import CallSessionViewSet
 
 router = routers.DefaultRouter()
 
-# 1)Base routers
+# Base routers
 router.register('searches', SearchViewSet, basename='searches')
 router.register('views', UserViewViewSet, basename='views')
 router.register('likes', LikeViewSet, basename='likes')
@@ -23,24 +23,29 @@ router.register('saved-playlists', SavedPlaylistViewSet,
                 basename='savedplaylists')
 router.register('chatsessions', ChatSessionViewSet, basename='chatsessions')
 
-# 2)Nested routers
-# a)'collections/<pk>/items/<item_pk>'
-# b)'collections/<pk>/items/<product_pk>'
+
+# Nested routers
 collection_router = routers.NestedDefaultRouter(router, 'collections',
                                                 lookup='collection')
+# collections/<pk>/items/<item_pk>
 collection_router.register('items', CollectionItemViewSet,
                            basename='collection-items')
+# collections/<pk>/items/<product_pk>
 collection_router.register('products', CollectionProductViewSet,
                            basename='collection-products')
 
-# c)'chatsessions/<pk>/messages/<message_pk>'
-# d)'chatsessions/<pk>/calls/<call_pk>'
 chatsession_router = routers.NestedDefaultRouter(router, 'chatsessions',
                                                  lookup='session')
+# chatsessions/<pk>/messages/<message_pk>
 chatsession_router.register('messages', ChatMessageViewSet,
                             basename='chatsession-messages')
+# chatsessions/<pk>/calls/<call_pk>
 chatsession_router.register('calls', CallSessionViewSet,
                             basename='chatsession-calls')
 
 
-urlpatterns = router.urls + collection_router.urls + chatsession_router.urls
+urlpatterns = (
+    router.urls +
+    collection_router.urls +
+    chatsession_router.urls
+)

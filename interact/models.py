@@ -122,7 +122,6 @@ class CollectionItem(AbstractCommon):
 # interact_savedplaylist
 class SavedPlaylist(models.Model):
     saved_at = models.DateTimeField(auto_now_add=True)
-
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
                              related_name='saved_playlists')
     playlist = models.ForeignKey('store.Playlist', on_delete=models.CASCADE,

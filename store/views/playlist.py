@@ -1,23 +1,34 @@
 from rest_framework import viewsets
 from rest_framework.permissions import AllowAny
-from store.models import Playlist
-from store.serializers.playlist import PlaylistSerializer, PlaylistSimpleSerializer
+from django_filters.rest_framework import DjangoFilterBackend
+from django.db.models import Count
+from store.models import Playlist, PlaylistItem
+from store.serializers.playlist import PlaylistSerializer, PlaylistItemListSerializer
 
 
 class PlaylistViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = [AllowAny]
+    serializer_class = PlaylistSerializer
+    queryset = Playlist.objects.select_related('host'). \
+        annotate(items_count=Count('playlist_items'))
 
-    def get_serializer_class(self):
-        if self.action == 'list':
-            return PlaylistSimpleSerializer
-        return PlaylistSerializer
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ['host']
 
-    # URL becomes /store/playlists/<short_uuid>/
     lookup_field = 'short_uuid'  # safe public ID
 
-    queryset = Playlist.objects. \
-        prefetch_related(
-            'playlist_items__product__video',
-            'playlist_items__product__expression',
-            'playlist_items__product__subtitle__expressions',
-        ).select_related('host')
+
+class PlaylistItemViewSet(viewsets.ReadOnlyModelViewSet):
+    permission_classes = [AllowAny]
+    serializer_class = PlaylistItemListSerializer
+
+    def get_queryset(self):
+        return PlaylistItem.objects. \
+            filter(playlist__short_uuid=self.kwargs['playlist_short_uuid']). \
+            select_related(
+                'product__video',
+                'product__expression',
+                'product__subtitle'
+            ). \
+            prefetch_related('product__subtitle__expressions'). \
+            order_by('order')
