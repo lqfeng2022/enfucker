@@ -206,7 +206,7 @@ class PlaylistItemInline(ProductThumbnailAdminMixin, admin.StackedInline):
 
     extra = 0
     min_num = 0
-    max_num = 10
+    max_num = 1000
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
