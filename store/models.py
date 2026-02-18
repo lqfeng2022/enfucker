@@ -223,41 +223,47 @@ class Product(AbstractCommon):
         ordering = ['-updated_at']
 
 
-# store_playlist
-class Playlist(AbstractCommon):
-    host = models.ForeignKey(Host, on_delete=models.CASCADE,
-                             related_name='playlists')
-
+# store_course (group playlists)
+class Course(AbstractCommon):
     title = models.CharField(max_length=255)
-    slug = models.SlugField(db_index=True)  # important for API lookup
-
-    short_uuid = models.CharField(max_length=22, unique=True, editable=False,
-                                  default=short_uuid)
-
-    products = models.ManyToManyField(Product, through='PlaylistItem',
-                                      related_name='playlists')
+    slug = models.SlugField(unique=True)
+    cover = models.ImageField(upload_to='store/image/course-cover', blank=True)
 
     def __str__(self) -> str:
         return f'{self.title}'
 
-    def get_first_product_thumbnail(self):
-        first_item = self.playlist_items.order_by('order'). \
-            select_related('product__video',
-                           'product__expression',
-                           'product__subtitle'). \
-            prefetch_related('product__subtitle__expressions').first()
-
-        if first_item and first_item.product:
-            return first_item.product.get_thumbnail_url()
-
-        return None
-
     class Meta:
-        unique_together = [('host', 'slug')]
         ordering = ['-created_at']
 
 
-# store_playlistitem
+# store_playlist (ordered inside a course)
+class Playlist(AbstractCommon):
+    short_uuid = models.CharField(max_length=22, unique=True, editable=False,
+                                  default=short_uuid)
+
+    title = models.CharField(max_length=255)
+    slug = models.SlugField(db_index=True)  # important for API lookup
+    cover = models.ImageField(upload_to='store/image/list-cover', blank=True)
+
+    host = models.ForeignKey(Host, on_delete=models.CASCADE,
+                             related_name='playlists')
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, null=True, blank=True,
+                               related_name='playlists')
+
+    products = models.ManyToManyField(Product, through='PlaylistItem',
+                                      related_name='playlists')
+
+    order = models.PositiveIntegerField(default=0, db_index=True)
+
+    def __str__(self) -> str:
+        return f'{self.title}'
+
+    class Meta:
+        unique_together = [('host', 'slug')]
+        ordering = ['course', 'order']
+
+
+# store_playlistitem (orders products inside a playlist)
 class PlaylistItem(AbstractCommon):
     order = models.PositiveIntegerField(default=0, db_index=True)
 
@@ -270,5 +276,6 @@ class PlaylistItem(AbstractCommon):
         return f'{self.product}'
 
     class Meta:
-        unique_together = [('playlist', 'product'), ('playlist', 'order')]
+        unique_together = [('playlist', 'product'),
+                           ('playlist', 'order')]
         ordering = ['order']

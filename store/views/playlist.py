@@ -1,4 +1,4 @@
-from django.db.models import Max, Count, Q
+from django.db.models import Count, Q, F
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import viewsets
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -54,17 +54,11 @@ class PlaylistProductViewSet(ListModelMixin, GenericViewSet):
         queryset = (
             Product.objects.filter(playlist_filter).
             select_related(
-                'host',
-                'expression',
-                'subtitle',
-                'video',
-                'video__genre',
+                'host', 'expression', 'subtitle', 'video', 'video__genre',
             ).
-            annotate(latest_added=Max(
-                'playlist_items__updated_at',
-                filter=playlist_filter
-            ))
+            annotate(playlist_order=F('playlist_items__order'))
         )
+
         queryset = annotate_state_for_product(queryset, user)
 
-        return queryset.order_by('-latest_added').distinct()
+        return queryset.order_by('playlist_order')
