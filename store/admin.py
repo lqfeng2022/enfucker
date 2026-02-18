@@ -141,8 +141,6 @@ class ExpressionInline(ThumbnailMixin, admin.StackedInline):
 
     prepopulated_fields = {'slug': ['title']}
 
-    # classes = ['collapse']
-
     extra = 0
     min_num = 0
     max_num = 200
@@ -195,9 +193,23 @@ class ProductAdmin(FormattedUpdateDateMixin, ContentLinkMixin, admin.ModelAdmin)
 
 
 # 9)Course admin
+class PlaylistInline(ThumbnailMixin, admin.StackedInline):
+    model = Playlist
+
+    readonly_fields = ['thumbnail']
+    prepopulated_fields = {'slug': ['title']}
+
+    ordering = ['order']
+    extra = 0
+    min_num = 0
+    max_num = 100
+
+
 @admin.register(Course)
-class CourseAdmin(PlaylistCountMinxin, FormattedCreateDateMixin,
+class CourseAdmin(ThumbnailMixin, PlaylistCountMinxin, FormattedCreateDateMixin,
                   FormattedUpdateDateMixin, admin.ModelAdmin):
+    inlines = [PlaylistInline]
+
     list_display = ['id', 'title', 'host__name', 'playlist_count',
                     'formatted_created_at', 'formatted_updated_at']
     list_per_page = 15
@@ -210,12 +222,13 @@ class CourseAdmin(PlaylistCountMinxin, FormattedCreateDateMixin,
 
 
 # 8)Playlist, PlaylistItem admins
-# A)Playlist admin
 class PlaylistItemInline(ProductThumbnailAdminMixin, admin.StackedInline):
     model = PlaylistItem
 
     autocomplete_fields = ['product']
     readonly_fields = ['product_thumbnail']
+
+    classes = ['collapse']
 
     ordering = ['order']
 
@@ -236,7 +249,7 @@ class PlaylistItemInline(ProductThumbnailAdminMixin, admin.StackedInline):
 
 
 @admin.register(Playlist)
-class PlaylistAdmin(PlaylistItemCountMinxin, FormattedCreateDateMixin,
+class PlaylistAdmin(ThumbnailMixin, PlaylistItemCountMinxin, FormattedCreateDateMixin,
                     FormattedUpdateDateMixin, admin.ModelAdmin):
     inlines = [PlaylistItemInline]
 
@@ -251,7 +264,6 @@ class PlaylistAdmin(PlaylistItemCountMinxin, FormattedCreateDateMixin,
     ordering = ['id']
 
 
-# B)PlaylistItem admin
 @admin.register(PlaylistItem)
 class PlaylistItemAdmin(PlaylistLinkMixin, FormattedCreateDateMixin,
                         admin.ModelAdmin):
