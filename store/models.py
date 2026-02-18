@@ -231,7 +231,7 @@ class Course(AbstractCommon):
     cover = models.ImageField(upload_to='store/image/course-cover', blank=True)
 
     host = models.ForeignKey(Host, on_delete=models.CASCADE,
-                             related_name='playlists')
+                             related_name='courses')
 
     def __str__(self) -> str:
         return f'{self.title}'
@@ -250,6 +250,9 @@ class Playlist(AbstractCommon):
     slug = models.SlugField(db_index=True)  # important for API lookup
     cover = models.ImageField(upload_to='store/image/list-cover', blank=True)
 
+    host = models.ForeignKey(Host, on_delete=models.CASCADE,
+                             related_name='playlists')
+
     course = models.ForeignKey(Course, on_delete=models.CASCADE, null=True, blank=True,
                                related_name='playlists')
 
@@ -262,6 +265,7 @@ class Playlist(AbstractCommon):
         return f'{self.title}'
 
     class Meta:
+        unique_together = [('host', 'slug')]
         ordering = ['course', 'order']
 
 

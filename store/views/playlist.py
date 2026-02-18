@@ -16,11 +16,11 @@ from interact.utils.annotates import annotate_state_for_product
 class PlaylistViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = [AllowAny]
     serializer_class = PlaylistSerializer
-    queryset = Playlist.objects.select_related('course'). \
+    queryset = Playlist.objects.select_related('host'). \
         annotate(items_count=Count('playlist_items'))
 
     filter_backends = [DjangoFilterBackend]
-    filterset_fields = ['course']
+    filterset_fields = ['host']
 
     lookup_field = 'short_uuid'  # safe public ID
 

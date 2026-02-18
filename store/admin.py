@@ -253,8 +253,8 @@ class PlaylistAdmin(ThumbnailMixin, PlaylistItemCountMinxin, FormattedCreateDate
                     FormattedUpdateDateMixin, admin.ModelAdmin):
     inlines = [PlaylistItemInline]
 
-    list_display = ['id', 'order', 'title', 'items_count',
-                    'formatted_created_at', 'formatted_updated_at']
+    list_display = ['id', 'order', 'title', 'host__name', 'course__title',
+                    'items_count', 'formatted_created_at', 'formatted_updated_at']
     list_per_page = 15
     list_filter = ['created_at']
 

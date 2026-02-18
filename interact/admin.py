@@ -4,7 +4,7 @@ from interact.mixins.admin import (
     CollectionLinkMixin, is_english_like_prefix)
 from store.mixins.admin import (
     FormattedCreateDateMixin, FormattedUpdateDateMixin, FormattedSavedDateMixin,
-    PlaylistLinkMixin)
+    PlaylistLinkMixin, CourseLinkMixin)
 from .mixins.admin import AudioThumbnailMixin
 from . import models
 
@@ -83,9 +83,19 @@ class CollectionItemAdmin(CollectionLinkMixin, FormattedCreateDateMixin,
     autocomplete_fields = ['product']
 
 
+# 7)SavedCourse Admin
+@admin.register(models.SavedCourse)
+class SavedCourseAdmin(CourseLinkMixin, FormattedSavedDateMixin,
+                       admin.ModelAdmin):
+    list_display = ['id', 'user', 'course_link', 'formatted_saved_at']
+    list_per_page = 15
+    list_filter = ['saved_at']
+
+
 # 6)SavedPlaylist Admin
 @admin.register(models.SavedPlaylist)
-class SavedPlaylistAdmin(PlaylistLinkMixin, FormattedSavedDateMixin, admin.ModelAdmin):
+class SavedPlaylistAdmin(PlaylistLinkMixin, FormattedSavedDateMixin,
+                         admin.ModelAdmin):
     list_display = ['id', 'user', 'playlist_link', 'formatted_saved_at']
     list_per_page = 15
     list_filter = ['saved_at']

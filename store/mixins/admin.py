@@ -196,6 +196,14 @@ class ProductCountMixin:
             .annotate(product_count=Count('products', distinct=True))
 
 
+class CourseLinkMixin:
+    @admin.display(description='Course')
+    def course_link(self, obj):
+        url = (reverse('admin:store_course_changelist') + '?'
+               + urlencode({'id': obj.course_id}))
+        return format_html("<a href='{}'>{}</a>", url, obj.course.title)
+
+
 class PlaylistLinkMixin:
     @admin.display(description='Playlist')
     def playlist_link(self, obj):
