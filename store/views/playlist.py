@@ -4,8 +4,11 @@ from rest_framework import viewsets
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.mixins import ListModelMixin
 from rest_framework.viewsets import GenericViewSet
-from store.models import Playlist, PlaylistItem, Product
-from store.serializers.playlist import PlaylistSerializer, PlaylistItemListSerializer
+from store.models import Playlist, PlaylistItem, Product, Course
+from store.serializers.playlist import (
+    PlaylistSerializer, PlaylistItemListSerializer, CourseListSerializer,
+    CourseSerializer
+)
 from store.serializers.product import ProductSerializer
 from interact.utils.annotates import annotate_state_for_product
 
@@ -13,11 +16,11 @@ from interact.utils.annotates import annotate_state_for_product
 class PlaylistViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = [AllowAny]
     serializer_class = PlaylistSerializer
-    queryset = Playlist.objects.select_related('host'). \
+    queryset = Playlist.objects.select_related('course'). \
         annotate(items_count=Count('playlist_items'))
 
     filter_backends = [DjangoFilterBackend]
-    filterset_fields = ['host']
+    filterset_fields = ['course']
 
     lookup_field = 'short_uuid'  # safe public ID
 
@@ -62,3 +65,20 @@ class PlaylistProductViewSet(ListModelMixin, GenericViewSet):
         queryset = annotate_state_for_product(queryset, user)
 
         return queryset.order_by('playlist_order')
+
+
+class CourseViewSet(viewsets.ReadOnlyModelViewSet):
+    permission_classes = [AllowAny]
+
+    def get_serializer_class(self):
+        if self.action == 'list':
+            return CourseListSerializer
+        return CourseSerializer
+
+    queryset = Course.objects.select_related('host'). \
+        annotate(palylists_count=Count('playlists'))
+
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ['host']
+
+    lookup_field = 'slug'

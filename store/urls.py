@@ -4,7 +4,7 @@ from interact.views.like import LikeAddViewSet, LikeProductViewSet
 from interact.views.chatsession import ChatSessionAddViewSet
 from interact.views.hostfollow import HostFollowAddViewSet, HostFollowedViewSet, HostFollowedProductsViewSet
 from interact.views.collection import BookmarkedProductViewSet
-from .views.playlist import PlaylistProductViewSet, PlaylistViewSet
+from .views.playlist import PlaylistProductViewSet, PlaylistViewSet, CourseViewSet
 from .views.product import ProductViewSet, FeedViewSet, RelevantViewSet
 from .views.host import HostViewSet, AlphabetViewSet, GenreViewSet
 
@@ -20,6 +20,8 @@ router.register('followed-hosts', HostFollowedViewSet,
                 basename='followed-hosts')
 
 router.register('feed', FeedViewSet, basename='feed')
+
+router.register('courses', CourseViewSet, basename='courses')
 
 router.register('playlists', PlaylistViewSet, basename='playlist')
 

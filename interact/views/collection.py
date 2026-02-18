@@ -173,8 +173,8 @@ class SavedPlaylistViewSet(ListModelMixin, RetrieveModelMixin, CreateModelMixin,
 
     def get_queryset(self):
         annotated_playlists = Playlist.objects. \
-            annotate(items_count=Count('playlist_items')). \
-            select_related('host')
+            select_related('course'). \
+            annotate(items_count=Count('playlist_items'))
         return SavedPlaylist.objects. \
             filter(user=self.request.user). \
             prefetch_related(

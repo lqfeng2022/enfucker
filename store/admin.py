@@ -1,13 +1,13 @@
 from django.contrib import admin
 from .models import (
     Country, City, Language, Genre, Alphabet, Video, Subtitle, Expression,
-    Product, Host, Playlist, PlaylistItem)
+    Product, Host, Playlist, PlaylistItem, Course)
 from .mixins.admin import (
     ThumbnailMixin, VideoCountMixin, VideoLinkMixin, SubtitleCountMinxin,
     SubtitleLinkMixin, ExpressionCountMixin, FormattedUpdateDateMixin,
     FormattedCreateDateMixin, ProductTypeFilter, ContentLinkMixin,
     ProductCountMixin, PlaylistItemCountMinxin, PlaylistLinkMixin,
-    ProductThumbnailAdminMixin
+    ProductThumbnailAdminMixin, PlaylistCountMinxin
 )
 from store.services.product_sync import sync_products_host_for_video
 
@@ -194,6 +194,21 @@ class ProductAdmin(FormattedUpdateDateMixin, ContentLinkMixin, admin.ModelAdmin)
     ordering = ['id']
 
 
+# 9)Course admin
+@admin.register(Course)
+class CourseAdmin(PlaylistCountMinxin, FormattedCreateDateMixin,
+                  FormattedUpdateDateMixin, admin.ModelAdmin):
+    list_display = ['id', 'title', 'host__name', 'playlist_count',
+                    'formatted_created_at', 'formatted_updated_at']
+    list_per_page = 15
+    list_filter = ['created_at']
+
+    prepopulated_fields = {'slug': ['title']}
+    related_field = 'course_id'
+
+    ordering = ['id']
+
+
 # 8)Playlist, PlaylistItem admins
 # A)Playlist admin
 class PlaylistItemInline(ProductThumbnailAdminMixin, admin.StackedInline):
@@ -225,7 +240,7 @@ class PlaylistAdmin(PlaylistItemCountMinxin, FormattedCreateDateMixin,
                     FormattedUpdateDateMixin, admin.ModelAdmin):
     inlines = [PlaylistItemInline]
 
-    list_display = ['id', 'host__name', 'title', 'items_count',
+    list_display = ['id', 'order', 'title', 'items_count',
                     'formatted_created_at', 'formatted_updated_at']
     list_per_page = 15
     list_filter = ['created_at']

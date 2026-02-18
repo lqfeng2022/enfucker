@@ -214,3 +214,15 @@ class PlaylistItemCountMinxin:
     def get_queryset(self, request):
         return super().get_queryset(request).annotate(
             items_count=Count('playlist_items', distinct=True))
+
+
+class PlaylistCountMinxin:
+    @admin.display(ordering='playlist_count', description='Playlists')
+    def playlist_count(self, obj):
+        url = (reverse('admin:store_playlist_changelist') + '?'
+               + urlencode({self.related_field: str(obj.id)}))
+        return format_html("<a href='{}'>{}</a>", url, obj.playlist_count)
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).annotate(
+            playlist_count=Count('playlists', distinct=True))
