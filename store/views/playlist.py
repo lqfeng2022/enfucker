@@ -76,7 +76,7 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
         return CourseSerializer
 
     queryset = Course.objects.select_related('host'). \
-        annotate(palylists_count=Count('playlists'))
+        annotate(items_count=Count('playlists'))
 
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ['host']

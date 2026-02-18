@@ -7,15 +7,16 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.mixins import (
     ListModelMixin, RetrieveModelMixin, CreateModelMixin, DestroyModelMixin
 )
-from store.models import Playlist
+from store.models import Playlist, Course
 from store.serializers.product import ProductSerializer
 from interact.utils.decorators import RetryOnDeadlock
 from interact.utils.annotates import annotate_state_for_product
 from interact.utils.getmodels import get_product_model
-from interact.models import Collection, CollectionItem, SavedPlaylist
+from interact.models import Collection, CollectionItem, SavedPlaylist, SavedCourse
 from interact.serializers.collection import (
     CollectionSerializer, CollectionUpdateSerializer, CollectionItemSerializer,
-    CollectionItemAddSerializer, SavedPlaylistSerializer, SavedPlaylistAddSerializer
+    CollectionItemAddSerializer, SavedPlaylistSerializer, SavedPlaylistAddSerializer,
+    SavedCourseAddSerializer, SavedCourseSerializer
 )
 
 
@@ -185,4 +186,30 @@ class SavedPlaylistViewSet(ListModelMixin, RetrieveModelMixin, CreateModelMixin,
         SavedPlaylist.objects.get_or_create(
             user=self.request.user,
             playlist=serializer.validated_data['playlist']
+        )
+
+
+class SavedCourseViewSet(ListModelMixin, RetrieveModelMixin, CreateModelMixin,
+                         DestroyModelMixin, GenericViewSet):
+    permission_classes = [IsAuthenticated]
+
+    def get_serializer_class(self):
+        if self.action == 'create':
+            return SavedCourseAddSerializer
+        return SavedCourseSerializer
+
+    def get_queryset(self):
+        annotated_courses = Course.objects. \
+            select_related('host'). \
+            annotate(items_count=Count('playlists'))
+        return SavedCourse.objects. \
+            filter(user=self.request.user). \
+            prefetch_related(
+                Prefetch('course', queryset=annotated_courses)
+            )
+
+    def perform_create(self, serializer):
+        SavedCourse.objects.get_or_create(
+            user=self.request.user,
+            course=serializer.validated_data['course']
         )

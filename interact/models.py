@@ -132,6 +132,19 @@ class SavedPlaylist(models.Model):
         ordering = ['-saved_at']
 
 
+# interact_savedcourse
+class SavedCourse(models.Model):
+    saved_at = models.DateTimeField(auto_now_add=True)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
+                             related_name='saved_courses')
+    course = models.ForeignKey('store.Course', on_delete=models.CASCADE,
+                               related_name='saved_courses')
+
+    class Meta:
+        unique_together = [('user', 'course')]
+        ordering = ['-saved_at']
+
+
 # interact_chatsession
 class ChatSession(AbstractCommon):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE,

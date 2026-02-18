@@ -6,11 +6,12 @@ from store.serializers.host import HostSimpleSerializer
 
 class CourseListSerializer(serializers.ModelSerializer):
     host = HostSimpleSerializer(read_only=True)
+    items_count = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = Course
-        fields = ['title', 'slug', 'host', 'cover', 'created_at',
-                  'updated_at']
+        fields = ['title', 'slug', 'host', 'cover', 'items_count',
+                  'created_at', 'updated_at']
 
 
 class PlaylistItemListSerializer(serializers.ModelSerializer):
@@ -44,9 +45,10 @@ class PlaylistSerializer(serializers.ModelSerializer):
 
 class CourseSerializer(serializers.ModelSerializer):
     host = HostSimpleSerializer(read_only=True)
+    items_count = serializers.IntegerField(read_only=True)
     playlists = PlaylistSimpleSerializer(many=True, read_only=True)
 
     class Meta:
         model = Course
-        fields = ['title', 'slug', 'host', 'cover', 'playlists',
-                  'created_at', 'updated_at']
+        fields = ['id', 'title', 'slug', 'host', 'cover', 'playlists',
+                  'items_count', 'created_at', 'updated_at']
