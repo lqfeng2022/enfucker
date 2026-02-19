@@ -32,14 +32,7 @@ class CollectionViewSet(ModelViewSet):
     def get_queryset(self):
         user = self.request.user
         queryset = Collection.objects.filter(user_id=user.id). \
-            prefetch_related(
-                'items__product',
-                'items__product__host',
-                'items__product__video',
-                'items__product__expression',
-                'items__product__subtitle',
-                'items__product__subtitle__expressions'
-        ).annotate(items_count=Count('items'))
+            annotate(items_count=Count('items'))
         return queryset
 
     def get_serializer_context(self):
@@ -72,6 +65,37 @@ class CollectionViewSet(ModelViewSet):
         if request.method == 'DELETE':
             list_obj.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
+
+    # custom url: get all product related collections
+    @action(detail=False, methods=['get'], url_path='products/(?P<product_id>\d+)')
+    def collections_for_product(self, request, product_id=None):
+        collections = Collection.objects. \
+            filter(user=request.user, items__product_id=product_id). \
+            distinct()
+        serializer = CollectionSerializer(
+            collections, many=True, context={'request': request}
+        )
+        return Response(serializer.data)
+
+    # custom url: delte all product related collections
+    @action(detail=False, methods=['delete'], url_path='product')
+    def remove_product_from_collections(self, request):
+        product_id = request.data.get('product_id')
+        list_ids = request.data.get('listIds', [])
+
+        if not product_id or not list_ids:
+            return Response(
+                {'detail': 'product_id and listIds are required.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        CollectionItem.objects.filter(
+            collection_id__in=list_ids,
+            product_id=product_id,
+            collection__user=request.user
+        ).delete()
+
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 # '/interact/collections/<pk>/items/<pk>'
