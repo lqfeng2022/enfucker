@@ -174,7 +174,7 @@ class ContentLinkMixin:
         elif obj.subtitle_id:
             url = reverse('admin:store_subtitle_change',
                           args=(obj.subtitle_id,))
-            return format_html('<a href="{}">{}</a>', url, f'{obj.subtitle.content[:30]}...')
+            return format_html('<a href="{}">{}</a>', url, obj.subtitle.title)
         elif obj.expression_id:
             url = reverse('admin:store_expression_change',
                           args=(obj.expression_id,))

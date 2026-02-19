@@ -40,9 +40,9 @@ class ProductSerializer(ProductContentMixin, serializers.ModelSerializer):
 
     class Meta:
         model = Product
-        fields = ['id', 'type', 'host', 'views_count', 'likes_count',
+        fields = ['id', 'type', 'host', 'content', 'views_count', 'likes_count',
                   'like_state', 'bookmarks_count', 'bookmark_state',
-                  'chat_state', 'followed', 'content', 'created_at', 'updated_at']
+                  'chat_state', 'followed', 'created_at', 'updated_at']
 
     def get_like_state(self, obj):
         return getattr(obj, '_is_liked', False)

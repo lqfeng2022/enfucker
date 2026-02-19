@@ -76,4 +76,4 @@ class SubtitleSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Subtitle
-        fields = ['id', 'order', 'content', 'expressions']
+        fields = ['id', 'order', 'title', 'expressions']

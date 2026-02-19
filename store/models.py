@@ -135,10 +135,12 @@ class Subtitle(AbstractCommon):
                               related_name='subtitles')
 
     order = models.PositiveSmallIntegerField()
+
+    title = models.CharField(max_length=255)
     content = models.TextField()
 
     def __str__(self) -> str:
-        return f'{self.content[:40]}...'
+        return self.title
 
     class Meta:
         ordering = ['id']
@@ -197,10 +199,8 @@ class Product(AbstractCommon):
         elif self.type == self.PRODUCT_EXPRESSION and self.expression:
             return self.expression.title
         elif self.type == self.PRODUCT_SUBTITLE and self.subtitle:
-            # Show first 30 chars to avoid huge strings
-            preview = (self.subtitle.content[:30] + '...') if \
-                len(self.subtitle.content) > 30 else self.subtitle.content
-            return preview
+            return self.subtitle.title
+
         # fallback — should never happen if your data is clean
         return f'Product {self.pk}'
 

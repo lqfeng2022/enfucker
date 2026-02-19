@@ -18,7 +18,7 @@ class ProductViewSet(ReadOnlyModelViewSet):
 
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_fields = ['host', 'type']
-    search_fields = ['expression__title', 'subtitle__content', 'video__title']
+    search_fields = ['expression__title', 'subtitle__title', 'video__title']
     ordering_fields = ['created_at', 'updated_at', 'views_count',
                        'likes_count']
 

@@ -94,7 +94,7 @@ class HostAdmin(ThumbnailMixin, ProductCountMixin, FormattedUpdateDateMixin,
 class SubtitleInline(admin.StackedInline):
     model = Subtitle
 
-    fields = ['order', 'content']
+    fields = ['order', 'title', 'slug', 'content']
 
     classes = ['collapse']
 
@@ -151,18 +151,14 @@ class SubtitleAdmin(ExpressionCountMixin, VideoLinkMixin,
                     FormattedUpdateDateMixin, admin.ModelAdmin):
     inlines = [ExpressionInline]
 
-    list_display = ['id', 'order', 'display_content', 'expression_count',
-                    'video_link', 'formatted_updated_at']
+    list_display = ['id', 'order', 'title', 'expression_count', 'video_link',
+                    'formatted_updated_at']
     list_per_page = 15
     list_filter = ['updated_at']
 
     autocomplete_fields = ['video']
     search_fields = ['content']
     related_field = 'subtitle_id'
-
-    def display_content(self, obj):
-        return f'{obj.content[:30]}...'
-    display_content.short_description = 'Content'
 
 
 # 6)Expression admin
@@ -188,6 +184,7 @@ class ProductAdmin(FormattedUpdateDateMixin, ContentLinkMixin, admin.ModelAdmin)
 
     search_fields = ['id', 'video__title', 'subtitle__content',
                      'expression__title']
+    autocomplete_fields = ['video', 'subtitle', 'expression']
 
     ordering = ['id']
 
@@ -217,6 +214,7 @@ class CourseAdmin(ThumbnailMixin, PlaylistCountMinxin, FormattedCreateDateMixin,
 
     prepopulated_fields = {'slug': ['title']}
     related_field = 'course_id'
+    search_fields = ['title']
 
     ordering = ['id']
 
@@ -225,8 +223,8 @@ class CourseAdmin(ThumbnailMixin, PlaylistCountMinxin, FormattedCreateDateMixin,
 class PlaylistItemInline(ProductThumbnailAdminMixin, admin.StackedInline):
     model = PlaylistItem
 
-    autocomplete_fields = ['product']
     readonly_fields = ['product_thumbnail']
+    autocomplete_fields = ['product']
 
     classes = ['collapse']
 
@@ -260,6 +258,7 @@ class PlaylistAdmin(ThumbnailMixin, PlaylistItemCountMinxin, FormattedCreateDate
 
     prepopulated_fields = {'slug': ['title']}
     related_field = 'playlist_id'
+    autocomplete_fields = ['course', 'host']
 
     ordering = ['id']
 
