@@ -94,7 +94,7 @@ class HostAdmin(ThumbnailMixin, ProductCountMixin, FormattedUpdateDateMixin,
 class SubtitleInline(admin.StackedInline):
     model = Subtitle
 
-    fields = ['order', 'title', 'slug', 'content']
+    fields = ['order', 'title', 'content']
 
     classes = ['collapse']
 
