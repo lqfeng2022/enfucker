@@ -39,7 +39,7 @@ class CollectionViewSet(ModelViewSet):
                 'items__product__expression',
                 'items__product__subtitle',
                 'items__product__subtitle__expressions'
-        )
+        ).annotate(items_count=Count('items'))
         return queryset
 
     def get_serializer_context(self):

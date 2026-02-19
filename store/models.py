@@ -238,7 +238,7 @@ class Course(AbstractCommon):
 
     class Meta:
         unique_together = [('host', 'slug')]
-        ordering = ['-created_at']
+        ordering = ['-updated_at']
 
 
 # store_playlist (ordered inside a course)

@@ -17,7 +17,8 @@ class PlaylistViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = [AllowAny]
     serializer_class = PlaylistSerializer
     queryset = Playlist.objects.select_related('host'). \
-        annotate(items_count=Count('playlist_items'))
+        annotate(items_count=Count('playlist_items')). \
+        order_by('-updated_at')
 
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ['host']

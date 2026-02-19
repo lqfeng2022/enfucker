@@ -97,6 +97,22 @@ class Collection(AbstractCommon):
     def __str__(self) -> str:
         return f'{self.title}'
 
+    def get_first_product_thumbnail(self):
+        """
+        Return the thumbnail URL of the first product in this collection.
+        If no products exist, returns None.
+        """
+        first_item = self.items.filter(visible=True). \
+            select_related('product__video', 'product__expression',
+                           'product__subtitle'). \
+            prefetch_related('product__subtitle__expressions') \
+            .first()
+
+        if first_item and first_item.product:
+            return first_item.product.get_thumbnail_url()
+
+        return None
+
     class Meta:
         unique_together = [('user', 'title')]
         ordering = ['-created_at']

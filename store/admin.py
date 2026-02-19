@@ -196,6 +196,8 @@ class PlaylistInline(ThumbnailMixin, admin.StackedInline):
     readonly_fields = ['thumbnail']
     prepopulated_fields = {'slug': ['title']}
 
+    classes = ['collapse']
+
     ordering = ['order']
     extra = 0
     min_num = 0
