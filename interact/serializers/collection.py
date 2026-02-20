@@ -53,23 +53,23 @@ class CollectionUpdateSerializer(serializers.ModelSerializer):
 
     # update an existing collection
     def update(self, instance, validated_data):
-        # If title is updated, regenerate the slug
+        # If title is updated, regenerate the slug only
         if 'title' in validated_data:
             validated_data['slug'] = text.slugify(validated_data['title'])
         return super().update(instance, validated_data)
 
 
 class CollectionSerializer(serializers.ModelSerializer):
-    slug = serializers.StringRelatedField(read_only=True)
+    slug = serializers.CharField(read_only=True)
+    short_uuid = serializers.CharField(read_only=True)
+
     items_count = serializers.IntegerField(read_only=True)
 
     first_thumbnail = serializers.SerializerMethodField(read_only=True)
 
-    # items = CollectionItemSerializer(many=True, read_only=True)
-
     class Meta:
         model = Collection
-        fields = ['id', 'title', 'slug', 'items_count',
+        fields = ['id', 'title', 'slug', 'short_uuid', 'items_count',
                   'first_thumbnail', 'created_at', 'updated_at']
 
     def get_first_thumbnail(self, obj):

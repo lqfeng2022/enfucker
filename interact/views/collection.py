@@ -24,6 +24,8 @@ from interact.serializers.collection import (
 class CollectionViewSet(ModelViewSet):
     permission_classes = [IsAuthenticated]
 
+    lookup_field = 'short_uuid'
+
     def get_serializer_class(self):
         if self.action == 'update':
             return CollectionUpdateSerializer
@@ -40,31 +42,6 @@ class CollectionViewSet(ModelViewSet):
             'user_id': self.request.user.id,
             'request': self.request
         }
-
-    # custom url: 'interact/collections/slug/<slug>'
-    @action(detail=False, url_path='slug/(?P<slug>[^/.]+)', methods=['get', 'put', 'delete'])
-    def retrieve_by_slug(self, request, slug=None):
-        list_obj = self.get_queryset().filter(slug=slug).first()
-
-        if not list_obj:
-            return Response(
-                {'detail': 'Not found.'},
-                status=status.HTTP_404_NOT_FOUND
-            )
-
-        if request.method == 'GET':
-            serializer = self.get_serializer(list_obj)
-            return Response(serializer.data)
-
-        if request.method == 'PUT':
-            serializer = self.get_serializer(list_obj, data=request.data)
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
-            return Response(serializer.data)
-
-        if request.method == 'DELETE':
-            list_obj.delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
 
     # custom url: get all product related collections
     @action(detail=False, methods=['get'], url_path='products/(?P<product_id>\d+)')
