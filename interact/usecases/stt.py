@@ -7,7 +7,7 @@ from interact.models import ChatMessage
 from interact.utils.recorder import record_usage
 from interact.validators import validate_text_audio_input
 from interact.utils.credits import require_credits
-
+from interact.services.session_projection import record_voice_usage
 import logging
 
 logger = logging.getLogger(__name__)
@@ -65,3 +65,6 @@ def process_stt_for_message(message: ChatMessage):
     if message.audio_seconds > 0:
         record_usage(message=message, model=stt_model,
                      units=Decimal(message.audio_seconds))
+
+    # Record STT audio duration to chatsession
+    record_voice_usage(message=message)

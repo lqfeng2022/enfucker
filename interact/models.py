@@ -187,6 +187,14 @@ class ChatSession(AbstractCommon):
     cost = models.DecimalField(max_digits=12, decimal_places=6, default=0,
                                help_text="Cached sum of ModelUsage costs (derived)")
 
+    # financial projection
+    credits_used = models.PositiveIntegerField(default=0)
+
+    # usage projection
+    user_audio_seconds = models.PositiveIntegerField(default=0)
+    assistant_audio_seconds = models.PositiveIntegerField(default=0)
+    call_audio_seconds = models.PositiveIntegerField(default=0)
+
     def __str__(self) -> str:
         return f'{self.id}'
 
@@ -316,8 +324,7 @@ class DebitLedger(models.Model):
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
                              related_name='credit_ledgers')
-    usage = models.ForeignKey(ModelUsage, null=True, blank=True,
-                              on_delete=models.SET_NULL)
+    usage = models.OneToOneField(ModelUsage, on_delete=models.PROTECT)
 
     amount = models.PositiveIntegerField(default=0)
     note = models.CharField(max_length=255, blank=True)

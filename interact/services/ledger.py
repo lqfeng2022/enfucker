@@ -1,7 +1,8 @@
 from django.db import transaction
+from django.db.models import F
 from interact.utils.getmodels import get_credit_account_model
 from interact.services.pricing import cost_to_credits
-from interact.models import DebitLedger
+from interact.models import DebitLedger, ChatSession
 import logging
 
 logger = logging.getLogger(__name__)
@@ -16,6 +17,7 @@ def debit_for_usage(*, usage):
     if credits <= 0:
         return None
 
+    # Lock credit account row
     account, _ = CreditAccount.objects. \
         select_for_update().get_or_create(user=usage.user)
 
@@ -40,5 +42,11 @@ def debit_for_usage(*, usage):
     account.balance -= credits
     account.lifetime_debits += credits
     account.save(update_fields=['balance', 'lifetime_debits'])
+
+    # Session projection update (if usage tied to session)
+    if usage.session_id:
+        ChatSession.objects.filter(id=usage.session_id).update(
+            credits_used=F('credits_used') + credits
+        )
 
     return ledger

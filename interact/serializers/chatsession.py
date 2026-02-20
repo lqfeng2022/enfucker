@@ -115,11 +115,21 @@ class ChatSessionListSerializer(serializers.ModelSerializer):
 
     # read from annotation, not SerializerMethodField
     messages_count = serializers.IntegerField(read_only=True)
+    total_duration = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = ChatSession
-        fields = ['id', 'messages_count', 'host', 'product', 'summary',
-                  'latest_chat', 'created_at', 'updated_at']
+        fields = ['id', 'messages_count', 'credits_used', 'user_audio_seconds',
+                  'assistant_audio_seconds', 'call_audio_seconds', 'total_duration',
+                  'host', 'product', 'summary', 'latest_chat', 'created_at',
+                  'updated_at']
+
+    def get_total_duration(self, obj):
+        return (
+            (obj.user_audio_seconds or 0) +
+            (obj.assistant_audio_seconds or 0) +
+            (obj.call_audio_seconds or 0)
+        )
 
 
 class ChatSessionSerializer(serializers.ModelSerializer):

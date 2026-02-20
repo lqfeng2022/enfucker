@@ -4,7 +4,7 @@ from interact.models import Like, UserView, CollectionItem
 
 
 class Command(BaseCommand):
-    help = 'Recalculate likes, views, bookmarks counts for all products'
+    help = "Recalculate likes, views, bookmarks counts for all products"
 
     def handle(self, *args, **kwargs):
         products = settings.STORE_PRODUCT_MODEL.objects.all()
@@ -22,8 +22,8 @@ class Command(BaseCommand):
                 bookmarks_count=bookmarks
             )
             self.stdout.write(
-                f'Updated Product {product.id}: likes={likes}, \
-                  views={views}, bookmarks={bookmarks}'
+                f"Updated Product {product.id}: likes={likes}, \
+                  views={views}, bookmarks={bookmarks}"
             )
 
-        self.stdout.write(self.style.SUCCESS('All products recalculated!'))
+        self.stdout.write(self.style.SUCCESS("All products recalculated!"))
