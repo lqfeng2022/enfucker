@@ -63,8 +63,8 @@ def assistant_tts_audio(*, message, is_voice=True):
             record_usage(message=message, model=tts_model,
                          units=Decimal(len(tts_text)))
 
-        # Record TTS audio duration to chatsession
-        record_voice_usage(message=message)
+            # Record TTS audio duration to chatsession
+            record_voice_usage(message=message)
 
         return message.audio
 

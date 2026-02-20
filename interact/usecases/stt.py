@@ -66,5 +66,5 @@ def process_stt_for_message(message: ChatMessage):
         record_usage(message=message, model=stt_model,
                      units=Decimal(message.audio_seconds))
 
-    # Record STT audio duration to chatsession
-    record_voice_usage(message=message)
+        # Record STT audio duration to chatsession
+        record_voice_usage(message=message)
