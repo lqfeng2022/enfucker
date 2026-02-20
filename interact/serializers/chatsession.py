@@ -115,14 +115,14 @@ class ChatSessionListSerializer(serializers.ModelSerializer):
 
     # read from annotation, not SerializerMethodField
     messages_count = serializers.IntegerField(read_only=True)
-    total_duration = serializers.IntegerField(read_only=True)
+
+    total_duration = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = ChatSession
         fields = ['id', 'messages_count', 'credits_used', 'user_audio_seconds',
                   'assistant_audio_seconds', 'call_audio_seconds', 'total_duration',
-                  'host', 'product', 'summary', 'latest_chat', 'created_at',
-                  'updated_at']
+                  'host', 'product', 'latest_chat', 'created_at', 'updated_at']
 
     def get_total_duration(self, obj):
         return (
@@ -137,15 +137,7 @@ class ChatSessionSerializer(serializers.ModelSerializer):
     product = ProductChatSerializer(read_only=True)
     host_id = serializers.IntegerField(write_only=True, required=False)  # NEW
 
-    # messages = serializers.SerializerMethodField()
-
     class Meta:
         model = ChatSession
         fields = ['id', 'visible', 'created_at', 'updated_at', 'host', 'product',
                   'host_id']  # include host_id in fields
-
-    # def get_messages(self, session):
-    #     qs = session.messages.filter(visible=True).order_by('created_at')
-    #     # ADD `context=self.context`,
-    #     # pass this serializer the context, so it contains request from viewset
-    #     return ChatMessageSerializer(qs, many=True, context=self.context).data
