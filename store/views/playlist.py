@@ -1,4 +1,4 @@
-from django.db.models import Count, Q, F
+from django.db.models import Count, Q, F, Prefetch
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import viewsets
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -17,7 +17,7 @@ class PlaylistViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = [AllowAny]
     serializer_class = PlaylistSerializer
     queryset = Playlist.objects.select_related('host'). \
-        annotate(items_count=Count('playlist_items')). \
+        annotate(playlist_count=Count('playlist_items')). \
         order_by('-updated_at')
 
     filter_backends = [DjangoFilterBackend]
@@ -33,11 +33,7 @@ class PlaylistItemViewSet(viewsets.ReadOnlyModelViewSet):
     def get_queryset(self):
         return PlaylistItem.objects. \
             filter(playlist__short_uuid=self.kwargs['playlist_short_uuid']). \
-            select_related(
-                'product__video',
-                'product__expression',
-                'product__subtitle'
-            ). \
+            select_related('product__video', 'product__expression', 'product__subtitle'). \
             prefetch_related('product__subtitle__expressions'). \
             order_by('order')
 
@@ -55,13 +51,9 @@ class PlaylistProductViewSet(ListModelMixin, GenericViewSet):
             playlist_items__playlist__short_uuid=playlist_uuid
         )
 
-        queryset = (
-            Product.objects.filter(playlist_filter).
-            select_related(
-                'host', 'expression', 'subtitle', 'video', 'video__genre',
-            ).
+        queryset = Product.objects.filter(playlist_filter). \
+            select_related('host', 'expression', 'subtitle', 'video', 'video__genre'). \
             annotate(playlist_order=F('playlist_items__order'))
-        )
 
         queryset = annotate_state_for_product(queryset, user)
 
@@ -71,15 +63,22 @@ class PlaylistProductViewSet(ListModelMixin, GenericViewSet):
 class CourseViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = [AllowAny]
 
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ['host']
+
+    lookup_field = 'slug'
+
     def get_serializer_class(self):
         if self.action == 'list':
             return CourseListSerializer
         return CourseSerializer
 
-    queryset = Course.objects.select_related('host'). \
-        annotate(items_count=Count('playlists'))
+    def get_queryset(self):
+        prefetch_queryset = Playlist.objects. \
+            annotate(product_count=Count('playlist_items')). \
+            order_by('order')
 
-    filter_backends = [DjangoFilterBackend]
-    filterset_fields = ['host']
-
-    lookup_field = 'slug'
+        # Course query: joins host, annotates playlists, prefetches all playlists
+        return Course.objects.select_related('host'). \
+            annotate(playlist_count=Count('playlists')). \
+            prefetch_related(Prefetch('playlists', queryset=prefetch_queryset))
