@@ -24,7 +24,7 @@ from interact.serializers.collection import (
 class CollectionViewSet(ModelViewSet):
     permission_classes = [IsAuthenticated]
 
-    lookup_field = 'short_uuid'
+    # lookup_field = 'short_uuid'
 
     def get_serializer_class(self):
         if self.action == 'update':
@@ -42,6 +42,25 @@ class CollectionViewSet(ModelViewSet):
             'user_id': self.request.user.id,
             'request': self.request
         }
+
+    # custom url: retrieve collection by short_uuid
+    # NOTE: lookup_field = 'short_uuid' works fine on parent urls, BUT not work on nested urls
+    @action(detail=False, url_path='slug/(?P<short_uuid>[^/.]+)', methods=['get', 'put', 'delete'])
+    def retrieve_by_short_uuid(self, request, short_uuid=None):
+        obj = self.get_queryset().filter(short_uuid=short_uuid).first()
+        if not obj:
+            return Response({'detail': 'Not found.'}, status=404)
+        if request.method == 'GET':
+            serializer = self.get_serializer(obj)
+            return Response(serializer.data)
+        if request.method == 'PUT':
+            serializer = self.get_serializer(obj, data=request.data)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            return Response(serializer.data)
+        if request.method == 'DELETE':
+            obj.delete()
+            return Response(status=204)
 
     # custom url: get all product related collections
     @action(detail=False, methods=['get'], url_path='products/(?P<product_id>\d+)')

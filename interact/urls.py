@@ -32,7 +32,7 @@ collection_router = routers.NestedDefaultRouter(router, 'collections',
 # collections/<pk>/items/<item_pk>
 collection_router.register('items', CollectionItemViewSet,
                            basename='collection-items')
-# collections/<pk>/items/<product_pk>
+# collections/<pk>/products/<product_pk>
 collection_router.register('products', CollectionProductViewSet,
                            basename='collection-products')
 
