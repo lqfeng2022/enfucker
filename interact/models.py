@@ -2,6 +2,7 @@ import uuid
 from django.conf import settings
 from django.db import models
 from django.utils import timezone
+from store.utils import short_uuid
 from .utils.mediauploadto import chat_audio_upload_to
 
 
@@ -86,13 +87,16 @@ class Like(AbstractCommon):
 
 # interact_collection
 class Collection(AbstractCommon):
+    short_uuid = models.CharField(max_length=22, unique=True, editable=False,
+                                  default=short_uuid)
+
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
                              related_name='collections')
     products = models.ManyToManyField(settings.STORE_PRODUCT_MODEL, through='CollectionItem',
                                       related_name='collections')
 
     title = models.CharField(max_length=255)
-    slug = models.SlugField()
+    slug = models.SlugField(blank=True)  # optional
 
     def __str__(self) -> str:
         return f'{self.title}'
