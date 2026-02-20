@@ -151,7 +151,8 @@ class CollectionProductViewSet(ListModelMixin, GenericViewSet):
         Product = get_product_model()
 
         product_ids = CollectionItem.objects. \
-            filter(collection__user=user, collection_id=collection, visible=True). \
+            filter(collection__user=user, collection_id=collection,
+                   visible=True). \
             values('product_id')
 
         queryset = Product.objects. \
@@ -176,7 +177,11 @@ class BookmarkedProductViewSet(ListModelMixin, GenericViewSet):
         queryset = (
             Product.objects.
             select_related(
-                'host', 'video', 'subtitle', 'expression', 'video__genre'
+                'host',
+                'video',
+                'subtitle',
+                'expression',
+                'video__genre'
             ).
             prefetch_related('subtitle__expressions').
             filter(items__collection__user=user, items__visible=True).
@@ -199,12 +204,11 @@ class SavedPlaylistViewSet(ListModelMixin, RetrieveModelMixin, CreateModelMixin,
     def get_queryset(self):
         annotated_playlists = Playlist.objects. \
             select_related('course'). \
-            annotate(items_count=Count('playlist_items'))
-        return SavedPlaylist.objects. \
-            filter(user=self.request.user). \
+            annotate(product_count=Count('playlist_items'))
+        return SavedPlaylist.objects.filter(user=self.request.user). \
             prefetch_related(
                 Prefetch('playlist', queryset=annotated_playlists)
-            )
+        )
 
     def perform_create(self, serializer):
         SavedPlaylist.objects.get_or_create(
@@ -225,7 +229,7 @@ class SavedCourseViewSet(ListModelMixin, RetrieveModelMixin, CreateModelMixin,
     def get_queryset(self):
         annotated_courses = Course.objects. \
             select_related('host'). \
-            annotate(items_count=Count('playlists'))
+            annotate(playlist_count=Count('playlists'))
         return SavedCourse.objects. \
             filter(user=self.request.user). \
             prefetch_related(
