@@ -1,9 +1,7 @@
-from django.db import transaction
 from django.db.models import F
 from interact.models import ChatSession
 
 
-@transaction.atomic
 def record_voice_usage(message):
     if not message.is_voice or message.audio_seconds <= 0:
         return
