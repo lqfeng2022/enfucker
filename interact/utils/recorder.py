@@ -1,7 +1,7 @@
 from decimal import Decimal
-from django.db.models import Sum
+from django.db.models import Sum, F
 from interact.services.ledger import debit_for_usage
-from interact.models import ModelUsage
+from interact.models import ModelUsage, ChatSession
 import logging
 
 logger = logging.getLogger(__name__)
@@ -80,5 +80,25 @@ def record_usage(*, session=None, message=None, call_session=None, model=None, u
         session.credits_used = (session.credits_used or 0) + \
             (ledger.amount if ledger else 0)
         session.save(update_fields=['credits_used'])
+
+    # Updte session user_audio_seconds and assistant_audio_seconds
+    if message and message.audio_seconds > 0:
+        if message.role == message.USER:
+            ChatSession.objects.filter(id=message.session_id).update(
+                user_audio_seconds=F('user_audio_seconds') +
+                Decimal(message.audio_seconds)
+            )
+        else:
+            ChatSession.objects.filter(id=message.session_id).update(
+                assistant_audio_seconds=F(
+                    'assistant_audio_seconds') + Decimal(message.audio_seconds)
+            )
+
+    # Update session call_audio_seconds
+    if call_session and call_session.duration_seconds > 0:
+        ChatSession.objects.filter(id=call_session.session_id).update(
+            call_audio_seconds=F('call_audio_seconds') +
+            call_session.duration_seconds
+        )
 
     return usage

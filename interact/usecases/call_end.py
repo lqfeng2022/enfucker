@@ -4,7 +4,6 @@ from ai.contracts import REALTIME
 from ai.services.get_aimodel import resolve_model
 from ai.services.get_modelprovider import get_stt_realtime_model_provider
 from interact.utils.recorder import record_usage
-from interact.services.session_projection import record_call_usage
 
 
 def end_call_and_record_usage(call_session):
@@ -40,6 +39,3 @@ def end_call_and_record_usage(call_session):
         model=model_provider,
         units=Decimal(duration),  # seconds
     )
-
-    # 6) Record call session duration
-    record_call_usage(call_session=call_session)
