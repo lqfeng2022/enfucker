@@ -70,8 +70,15 @@ def record_usage(*, session=None, message=None, call_session=None, model=None, u
 
     # Billing hook
     try:
-        debit_for_usage(usage=usage)
+        ledger = debit_for_usage(usage=usage)
     except ValueError as e:
         logger.info(f'Debit skipped for usage {usage.id}: {e}')
+        ledger = None
+
+    # Always update session credits_used
+    if session:
+        session.credits_used = (session.credits_used or 0) + \
+            (ledger.amount if ledger else 0)
+        session.save(update_fields=['credits_used'])
 
     return usage
