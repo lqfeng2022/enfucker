@@ -116,7 +116,7 @@ class VideoAdmin(SubtitleCountMinxin, ThumbnailMixin, FormattedUpdateDateMixin,
 
     prepopulated_fields = {'slug': ['title']}
     # useful to fields that have tons of items
-    autocomplete_fields = ['genre']
+    autocomplete_fields = ['genre', 'host']
     search_fields = ['title']
     related_field = 'video_id'  # set the CountMixin field here
 
@@ -196,6 +196,8 @@ class PlaylistInline(ThumbnailMixin, admin.StackedInline):
     readonly_fields = ['thumbnail']
     prepopulated_fields = {'slug': ['title']}
 
+    autocomplete_fields = ['host']
+
     classes = ['collapse']
 
     ordering = ['order']
@@ -217,6 +219,7 @@ class CourseAdmin(ThumbnailMixin, PlaylistCountMinxin, FormattedCreateDateMixin,
     prepopulated_fields = {'slug': ['title']}
     related_field = 'course_id'
     search_fields = ['title']
+    autocomplete_fields = ['host']
 
     ordering = ['id']
 

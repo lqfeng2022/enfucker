@@ -7,7 +7,15 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-def record_usage(*, session=None, message=None, call_session=None, model=None, units):
+def record_usage(
+    *,
+    session=None,
+    message=None,
+    call_session=None,
+    model=None,
+    units,
+    projection_audio=False  # TEMP FIX: see TODO below
+):
     """Record a usage instance, update costs and session projections."""
     if not message and not session:
         raise ValueError('Either message or session is required')
@@ -53,7 +61,8 @@ def record_usage(*, session=None, message=None, call_session=None, model=None, u
         usage=usage,
         message=message,
         session=session,
-        call_session=call_session
+        call_session=call_session,
+        project_audio=projection_audio,  # NEW
     )
 
     return usage
@@ -80,7 +89,14 @@ def update_costs(*, message=None, session=None, call_session=None):
         call_session.save(update_fields=['cost'])
 
 
-def update_session_projections(*, usage, message=None, session=None, call_session=None):
+def update_session_projections(
+    *,
+    usage,
+    message=None,
+    session=None,
+    call_session=None,
+    project_audio=False,  # NEW
+):
     """Update credits_used and audio seconds projections on ChatSession."""
     # Credits used
     try:
@@ -94,8 +110,12 @@ def update_session_projections(*, usage, message=None, session=None, call_sessio
         session.credits_used = (session.credits_used or 0) + ledger_amount
         session.save(update_fields=['credits_used'])
 
-    # Audio seconds (ISSUE)
-    if message and message.audio_seconds:
+    # TODO:
+    # Audio projection is temporarily gated by `project_audio`
+    # because record_usage() is called from multiple modules,
+    # which previously caused duplicate increments.
+    # Long-term: refactor to data-derived aggregate projection.
+    if project_audio and message and message.audio_seconds:
         seconds = int(message.audio_seconds)
         if message.role == message.USER:
             ChatSession.objects.filter(id=session.id).update(

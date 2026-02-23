@@ -6,8 +6,6 @@ from ai.services.get_aimodel import resolve_model
 from ai.contracts import TTS
 from interact.utils.recorder import record_usage
 from interact.utils.credits import require_credits
-
-
 import logging
 
 logger = logging.getLogger(__name__)
@@ -59,8 +57,12 @@ def assistant_tts_audio(*, message, is_voice=True):
 
         # Record TTS usage
         if message.audio_seconds > 0:
-            record_usage(message=message, model=tts_model,
-                         units=Decimal(len(tts_text)))
+            record_usage(
+                message=message,
+                model=tts_model,
+                units=Decimal(len(tts_text)),
+                projection_audio=True,
+            )
 
         return message.audio
 

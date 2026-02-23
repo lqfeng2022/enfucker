@@ -62,5 +62,9 @@ def process_stt_for_message(message: ChatMessage):
 
     # Record usage
     if message.audio_seconds > 0:
-        record_usage(message=message, model=stt_model,
-                     units=Decimal(message.audio_seconds))
+        record_usage(
+            message=message,
+            model=stt_model,
+            units=Decimal(message.audio_seconds),
+            projection_audio=True
+        )
