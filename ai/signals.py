@@ -27,6 +27,12 @@ def create_default_host_profile(host):
         tts_model=AIModel.objects.get(
             name=settings.DEFAULT_TTS_MODEL_NAME
         ),
+        realtime_model=AIModel.objects.get(
+            name=settings.DEFAULT_REALTIME_STT_MODEL_NAME
+        ),
+        stream_model=AIModel.objects.get(
+            name=settings.DEFAULT_STREAM_TTS_MDOEL_NAME
+        ),
         base_prompt=BasePrompt.objects.get(
             slug=settings.DEFAULT_BASE_PROMPT_SLUG
         ),

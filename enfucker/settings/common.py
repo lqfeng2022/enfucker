@@ -164,7 +164,9 @@ AI_MODELPROVIDER_MODEL = 'ai.ModelProvider'
 DEFAULT_CHAT_MODEL_NAME = 'deepseek-chat'
 DEFAULT_STT_MODEL_NAME = 'scribe_v1'
 DEFAULT_TTS_MODEL_NAME = 'eleven_v3'
-DEFAULT_ELEVENLABS_VOICE_ID = 'jK5Bt9mapTJFvlKvjcII'  # lee(Chinese)
+
+DEFAULT_REALTIME_STT_MODEL_NAME = 'scribe_v2_realtime'
+DEFAULT_STREAM_TTS_MDOEL_NAME = 'eleven_multilingual_v2'
 
 DEFAULT_BASE_PROMPT_SLUG = 'yoga-master'
 DEFAULT_PERSONA_PROMPT_SLUG = 'luna'
