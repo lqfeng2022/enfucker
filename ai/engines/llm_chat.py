@@ -11,8 +11,8 @@ def deepseek_engine(messages, *, model: str):
         response = client.chat.completions.create(
             model=model,
             messages=messages,
-            max_tokens=120,
-            temperature=0.9,
+            max_tokens=250,
+            temperature=0.8,
         )
 
         # DeepSeek/OpenAI Python SDK returns response.usage as a Pydantic object, not a dict.
