@@ -19,14 +19,11 @@ router.register('hosts', HostViewSet, basename='host')
 router.register('followed-hosts', HostFollowedViewSet,
                 basename='followed-hosts')
 
-router.register('feed', FeedViewSet, basename='feed')
-
 router.register('courses', CourseViewSet, basename='courses')
-
 router.register('playlists', PlaylistViewSet, basename='playlist')
 
+router.register('feed', FeedViewSet, basename='feed')
 router.register('products', ProductViewSet, basename='product')
-
 router.register('viewed-products', UserViewProductViewSet,
                 basename='viewed-products')
 router.register('liked-products', LikeProductViewSet,
@@ -47,14 +44,13 @@ product_router.register('chatsession', ChatSessionAddViewSet,
 product_router.register('relevants', RelevantViewSet,
                         basename='product-relevants')
 
-
 # store/playlists/<short_uuid>/products/
 playlist_router = routers.NestedDefaultRouter(router, 'playlists',
                                               lookup='playlist')
 playlist_router.register('products', PlaylistProductViewSet,
                          basename='playlist-products')
 
-
+# store/hosts/<host_pk>/follow/
 host_router = routers.NestedDefaultRouter(router, 'hosts', lookup='host')
 host_router.register('follow', HostFollowAddViewSet, basename='host-follow')
 

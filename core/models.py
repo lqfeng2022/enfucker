@@ -26,10 +26,9 @@ class Profile(AbstractCommon):
     phone = models.CharField(max_length=255, blank=True)  # optional field
     # null=True (db level behavior), blank=True, both needed
     birth_date = models.DateField(null=True, blank=True)
-    description = models.TextField(blank=True)
     bro = models.BooleanField(default=False)
 
-    description = models.CharField(max_length=255, null=True)
+    description = models.TextField(blank=True)
 
     def __str__(self):
         return f'{self.user.first_name} {self.user.last_name}'
