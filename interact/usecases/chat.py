@@ -1,4 +1,5 @@
 from ai.engines.llm_chat import deepseek_engine
+from ai.utils.normalizetext import format_text
 from ai.services.get_modelprovider import get_chat_model_provider
 from ai.services.get_aimodel import resolve_model
 from ai.contracts import CHAT
@@ -41,10 +42,6 @@ def get_assistant_message(*, session, user_msg: ChatMessage):
         })
     messages.extend(get_chat_context(session=session))
 
-    print('########## SYSTEM/CHAT PROMPTS DEBUG ##########')
-    print(messages)
-    print('########## END OF SYSTEM/CHAT PROMPTS DEBUG ##########')
-
     # 4)Call LLM
     model = resolve_model(profile=session.host.host_profile, usecase=CHAT)
     model_input_cache, model_input, model_output = get_chat_model_provider(
@@ -52,6 +49,10 @@ def get_assistant_message(*, session, user_msg: ChatMessage):
     )
 
     response = deepseek_engine(messages, model=model_output.model.name)
+
+    # ensure all callers receive formatted text regardless of engine output
+    if response.get('content'):
+        response['content'] = format_text(response['content'])
 
     if not response.get('success'):
         logger.error('LLM failure', extra={
