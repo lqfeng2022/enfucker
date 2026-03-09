@@ -61,8 +61,8 @@ class VideoSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Video
-        fields = ['id', 'genre', 'kind', 'title',
-                  'slug', 'released_year', 'original', 'cover', 'file']
+        fields = ['id', 'genre', 'kind', 'title', 'slug', 'released_year',
+                  'original', 'website', 'cover', 'file']
 
 
 class ExpressionSerializer(serializers.ModelSerializer):
