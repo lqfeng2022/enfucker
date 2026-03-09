@@ -1,4 +1,4 @@
-# interact/usecases/protocol.py
+# interact/realtime/protocol.py
 class ClientEvent:
     TEXT_PARTIAL = 'text.partial'
     TEXT_FINAL = 'text.final'

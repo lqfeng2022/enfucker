@@ -1,4 +1,4 @@
-# interact/usecases/websocket.py
+# interact/realtime/websocket.py
 import asyncio
 from asgiref.sync import sync_to_async
 from django.apps import apps

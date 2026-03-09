@@ -1,4 +1,4 @@
-# interact/usecases/reouting.py
+# interact/realtime/reouting.py
 from django.urls import path
 from interact.realtime.websocket import CallConsumer
 
