@@ -258,18 +258,18 @@ Responsibilities:
 
 ## Technology Stack
 
-Backend:
+**Backend**:
 
 - Django
 - Django REST Framework
 - Django Channels (WebSockets)
 
-AI:
+**AI**:
 
 - DeepSeek LLM
 - ElevenLabs Speech APIs
 
-Infrastructure:
+**Infrastructure**:
 
 - Celery (background tasks)
 - Redis (cachine, task broker)
@@ -290,7 +290,7 @@ pipenv install
 
 Due to a dependency resolver issue with Pipenv + Python 3.12, the openai package is installed manually inside the virtual environment.
 
-Activate the environment::
+Activate the environment:
 
 ```
 pipenv shell
@@ -302,13 +302,13 @@ Then install the package:
 pip install openai==1.109.1
 ```
 
-### Run migrations:
+Run migrations:
 
 ```
 pipenv run python manage.py migrate
 ```
 
-### Start development server:
+Start development server:
 
 ```
 pipenv run python manage.py runserver
@@ -322,10 +322,13 @@ Instead of only watching videos, users can **talk with AI Hosts that understand 
 
 ## More info
 
-- Website
+- **Website**  
   https://app.clipwords.me
-- Frontend (React Client)
+
+- **Frontend (React Client)**  
   https://github.com/lqfeng2022/clip-hub
-- Voice Gateway (Node.js)
-  https://github.com/lqfeng2022/node-service
-- Backend (this repository)
+
+- **Voice Gateway (Node.js)**
+  https://github.com/lqfeng2022/enfucker
+
+- **Backend (this repository)**

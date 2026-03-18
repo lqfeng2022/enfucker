@@ -28,9 +28,9 @@ django-redis = "*"
 channels = {extras = ["daphne"], version = "*"}
 
 [dev-packages]
-pytest = "*"
 pytest-django = "*"
 model-bakery = "*"
+pytest = "*"
 
 [requires]
 python_version = "3.12"
