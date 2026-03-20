@@ -214,7 +214,7 @@ class CourseAdmin(ThumbnailMixin, PlaylistCountMinxin, FormattedCreateDateMixin,
     list_display = ['id', 'title', 'host__name', 'playlist_count',
                     'formatted_created_at', 'formatted_updated_at']
     list_per_page = 15
-    list_filter = ['created_at']
+    list_filter = ['host', 'created_at']
 
     prepopulated_fields = {'slug': ['title']}
     related_field = 'course_id'
@@ -259,10 +259,11 @@ class PlaylistAdmin(ThumbnailMixin, PlaylistItemCountMinxin, FormattedCreateDate
     list_display = ['id', 'order', 'title', 'host__name', 'course__title',
                     'items_count', 'formatted_created_at', 'formatted_updated_at']
     list_per_page = 15
-    list_filter = ['created_at']
+    list_filter = ['course', 'host', 'created_at']
 
     prepopulated_fields = {'slug': ['title']}
     related_field = 'playlist_id'
+    search_fields = ['title']
     autocomplete_fields = ['course', 'host']
 
     ordering = ['id']
