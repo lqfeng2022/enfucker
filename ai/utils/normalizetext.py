@@ -1,29 +1,40 @@
+import re
+
+
 def normalize_text(text):
-    """Replace all CRLF and CR with LF and strip excessive blank lines."""
-    if not text:
-        return ''
-    # Replace \r\n or \r with \n
-    text = text.replace('\r\n', '\n').replace('\r', '\n')
-    # Remove multiple consecutive newlines
-    lines = [line.rstrip() for line in text.split('\n')]
-    cleaned = '\n'.join(lines)
-    return cleaned
-
-
-def format_text(text: str) -> str:
-    """Apply common formatting to LLM output.
-
-    Currently this does the same normalization as :func:`normalize_text` and
-    additionally strips all asterisk characters used for markdown emphasis.
-    We keep the transformation loose here so other usecases can build on it
-    later (e.g. removing other markdown decorations).
+    """Normalize newlines and trim whitespace.
     """
     if not text:
         return ''
 
-    # normalize whitespace/newlines first
-    formatted = normalize_text(text)
-    # remove all "*" characters, which the LLM sometimes inserts for
-    # emphasis (bold/italic).  Stripping them avoids unintended markup in
-    # persisted messages and across the UI.
-    return formatted.replace('*', '')
+    # Normalize line breaks
+    text = text.replace('\r\n', '\n').replace('\r', '\n')
+
+    # Strip each line
+    lines = [line.rstrip() for line in text.split('\n')]
+    cleaned = '\n'.join(lines)
+
+    return cleaned
+
+
+def format_text(text: str) -> str:
+    """Format LLM output for chat-style display.
+    """
+    if not text:
+        return ''
+
+    text = normalize_text(text)
+
+    # Remove markdown emphasis
+    text = text.replace('*', '')
+
+    # Collapse multiple newlines → max 1
+    text = re.sub(r'\n+', '\n', text)
+
+    # Convert newlines to space (chat style)
+    text = text.replace('\n', ' ')
+
+    # Remove extra spaces
+    text = re.sub(r'\s+', ' ', text)
+
+    return text.strip()
