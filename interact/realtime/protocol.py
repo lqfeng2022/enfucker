@@ -6,6 +6,6 @@ class ClientEvent:
 
 
 class ServerEvent:
-    AGENT_STATE = 'agent.state'     # idle | thinking | speaking
+    AGENT_STATE = 'agent.state'     # thinking | responded | idle
     AGENT_TEXT = 'agent.text'       # text to be spoken by TTS
     ERROR = 'error'

@@ -12,11 +12,6 @@ from .chat import get_assistant_message
 
 
 class VoiceAgent:
-    """
-    Call-scoped conversational agent.
-    Consumes finalized user text and emits assistant actions.
-    """
-
     def __init__(self, call_session, send_event):
         self.call_session = call_session
         self.session = call_session.session
@@ -24,27 +19,17 @@ class VoiceAgent:
         self.is_processing = False
 
     async def on_user_text(self, text: str):
-        """
-        Handle finalized user text (TEXT_FINAL).
-        """
         if not text.strip():
             return
 
+        # Drop or queue — policy decision
         if self.is_processing:
-            # Drop or queue — policy decision
             return
-
         if self.call_session.state != CallSession.ACTIVE:
             return
-
         self.is_processing = True
 
         try:
-            # Agent thinking
-            await self.send_event(ServerEvent.AGENT_STATE, {
-                'state': 'thinking'
-            })
-
             # Persist USER message (belongs to call)
             user_msg = await sync_to_async(ChatMessage.objects.create)(
                 session=self.session,
@@ -61,7 +46,7 @@ class VoiceAgent:
 
             if not assistant_msg:
                 await self.send_event(ServerEvent.ERROR, {
-                    'message': 'Assistant failed to generate reply'
+                    "message": "Assistant failed to generate reply"
                 })
                 return
 
@@ -71,21 +56,19 @@ class VoiceAgent:
                 update_fields=['call_session']
             )
 
-            # Agent speaking (before text)
-            await self.send_event(ServerEvent.AGENT_STATE, {
-                'state': 'speaking'
-            })
-
             # Emit assistant text
             clean_text = format_for_tts(assistant_msg.content)
+            print("##### AGENT REPLY:", clean_text)  # debug
+
+            # return FIRST (for state timing)
             await self.send_event(ServerEvent.AGENT_TEXT, {
-                'text': clean_text
+                "text": clean_text
             })
-            print('🧠 AGENT REPLY:', clean_text)  # debug
 
             # Record streaming TTS usage
             stream_model = await sync_to_async(resolve_model)(
-                profile=self.session.host.host_profile, usecase=STREAM
+                profile=self.session.host.host_profile,
+                usecase=STREAM
             )
             stream_model_provider = await sync_to_async(get_tts_stream_model_provider)(
                 model=stream_model
@@ -97,10 +80,7 @@ class VoiceAgent:
                 units=Decimal(len(clean_text)),  # char-based billing
             )
 
+            return clean_text
+
         finally:
             self.is_processing = False
-
-            # Back to idle
-            await self.send_event(ServerEvent.AGENT_STATE, {
-                'state': 'idle'
-            })
