@@ -11,7 +11,7 @@ def deepseek_engine(messages, *, model: str):
         response = client.chat.completions.create(
             model=model,
             messages=messages,
-            max_tokens=250,
+            # max_tokens=250,
             temperature=0.8,
         )
 
