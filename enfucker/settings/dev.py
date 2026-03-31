@@ -23,9 +23,11 @@ DATABASES = {
 
 
 DEEPSEEK_BASE_URL = 'https://api.deepseek.com'
+QWEN_BASE_URL = 'https://dashscope.aliyuncs.com/compatible-mode/v1'
 
 DEEPSEEK_API_KEY = os.environ.get('DEEPSEEK_API_KEY')
 ELEVENLABS_API_KEY = os.environ.get('ELEVENLABS_API_KEY')
+QWEN_API_KEY = os.environ.get('QWEN_API_KEY')
 
 
 # test purpose, delete it later

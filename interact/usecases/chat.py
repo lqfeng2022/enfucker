@@ -1,4 +1,4 @@
-from ai.engines.llm_chat import deepseek_engine
+from ai.engines.llm_chat import qwenplus_engine
 from ai.utils.normalizetext import format_text
 from ai.services.get_modelprovider import get_chat_model_provider
 from ai.services.get_aimodel import resolve_model
@@ -44,11 +44,9 @@ def get_assistant_message(*, session, user_msg: ChatMessage):
 
     # 4)Call LLM
     model = resolve_model(profile=session.host.host_profile, usecase=CHAT)
-    model_input_cache, model_input, model_output = get_chat_model_provider(
-        model=model
-    )
+    model_input, model_output = get_chat_model_provider(model=model)
 
-    response = deepseek_engine(messages, model=model_output.model.name)
+    response = qwenplus_engine(messages, model=model_output.model.name)
 
     # ensure all callers receive formatted text regardless of engine output
     if response.get('content'):
@@ -75,9 +73,9 @@ def get_assistant_message(*, session, user_msg: ChatMessage):
     # 6)Record usage
     usage = response.get('usage', {}) or {}
 
-    if usage.get('input_cached_tokens'):
-        record_usage(message=user_msg, model=model_input_cache,
-                     units=usage.get('input_cached_tokens'))
+    # if usage.get('input_cached_tokens'):
+    #     record_usage(message=user_msg, model=model_input_cache,
+    #                  units=usage.get('input_cached_tokens'))
 
     if usage.get('input_tokens'):
         record_usage(message=user_msg, model=model_input,

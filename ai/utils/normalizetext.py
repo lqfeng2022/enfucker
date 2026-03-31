@@ -28,6 +28,9 @@ def format_text(text: str) -> str:
     # Remove markdown emphasis
     text = text.replace('*', '')
 
+    # Add space around em-dash if missing
+    text = re.sub(r'\s*—\s*', ' — ', text)
+
     # Collapse multiple newlines → max 1
     text = re.sub(r'\n+', '\n', text)
 

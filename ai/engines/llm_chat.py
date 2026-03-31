@@ -35,3 +35,31 @@ def deepseek_engine(messages, *, model: str):
 
     except Exception as e:
         return {'success': False, 'error': f'[LLM ERROR] {str(e)}'}
+
+
+def qwenplus_engine(messages, *, model: str):
+    client = OpenAI(api_key=settings.QWEN_API_KEY,
+                    base_url=settings.QWEN_BASE_URL)
+
+    try:
+        response = client.chat.completions.create(
+            model=model,
+            messages=messages,
+            max_tokens=512,
+            temperature=0.7,
+        )
+
+        content = response.choices[0].message.content.strip()
+
+        # safe usage extraction for Qwen
+        usage = {}
+        if response.usage:
+            usage = {
+                'input_tokens': Decimal((response.usage.prompt_tokens) / 1000),
+                'output_tokens': Decimal((response.usage.completion_tokens) / 1000),
+            }
+
+        return {'success': True, 'content': content, 'usage': usage}
+
+    except Exception as e:
+        return {'success': False, 'error': f'[LLM ERROR] {str(e)}'}

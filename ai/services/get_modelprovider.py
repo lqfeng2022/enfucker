@@ -3,26 +3,17 @@ from ai.models import ModelProvider, Voice
 from ai.services.get_aimodel import get_default_tts_voice
 
 
-def get_chat_model_provider(*, model):
-    input_cache_provider = ModelProvider.objects.get(
-        model=model,
-        usecase=CHAT,
-        step=ModelProvider.CACHED_INPUT,
-    )
+def get_chat_model_provider(*, model, include_cache=False, usecase=CHAT):
+    steps = [ModelProvider.INPUT, ModelProvider.OUTPUT]
+    if include_cache:
+        steps.insert(0, ModelProvider.CACHED_INPUT)
 
-    input_provider = ModelProvider.objects.get(
-        model=model,
-        usecase=CHAT,
-        step=ModelProvider.INPUT,
-    )
+    providers = [
+        ModelProvider.objects.get(model=model, usecase=usecase, step=step)
+        for step in steps
+    ]
 
-    output_provider = ModelProvider.objects.get(
-        model=model,
-        usecase=CHAT,
-        step=ModelProvider.OUTPUT,
-    )
-
-    return input_cache_provider, input_provider, output_provider
+    return tuple(providers)
 
 
 def get_stt_realtime_model_provider(*, model):
