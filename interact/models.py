@@ -251,11 +251,13 @@ class CallSession(models.Model):
 
 # interact_chatmessage
 class ChatMessage(models.Model):
-    USER = 'user'
-    ASSISTANT = 'assistant'
+    USER, ASSISTANT= 'user', 'assistant'
     ROLE_CHOICES = [(USER, 'User'), (ASSISTANT, 'Assistant')]
 
+    TYPE_CHOICES = [('text', 'Text'), ('audio', 'STT'), ('call', 'Call')]
+
     created_at = models.DateTimeField(auto_now_add=True)
+    
     visible = models.BooleanField(default=True)
     session = models.ForeignKey(ChatSession, on_delete=models.CASCADE,
                                 related_name='messages')
@@ -264,6 +266,8 @@ class ChatMessage(models.Model):
 
     role = models.CharField(max_length=10, choices=ROLE_CHOICES)
     content = models.TextField()
+    
+    type = models.CharField(max_length=10, choices=TYPE_CHOICES, default='text')
 
     is_enhancement = models.BooleanField(default=False)
     enhanced_content = models.TextField(blank=True)
