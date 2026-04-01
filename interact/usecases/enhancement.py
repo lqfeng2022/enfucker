@@ -3,7 +3,7 @@ from ai.engines.llm_chat import deepseek_engine
 from ai.services.get_modelprovider import get_enhancement_model
 from ai.services.get_aimodel import resolve_model
 from ai.contracts import ENHANCE
-from ai.services.get_prompts import get_enhancement_instructions
+from ai.services.get_prompts import build_enhancement_instructions
 from interact.utils.recorder import record_usage
 from interact.utils.credits import require_credits
 import logging
@@ -50,7 +50,7 @@ def enhancement_engine(*, message, content: str) -> str:
     model_input_cache, model_input, model_output = get_enhancement_model(
         model=model)
 
-    instructions_text = get_enhancement_instructions()
+    instructions_text = build_enhancement_instructions()
     system_prompt = build_elevenlabs_prompt(instructions_text)
 
     if not system_prompt:

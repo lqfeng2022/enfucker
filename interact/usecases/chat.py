@@ -1,3 +1,4 @@
+from django.utils import timezone
 from ai.engines.llm_chat import qwenplus_engine
 from ai.utils.normalizetext import format_text
 from ai.services.get_modelprovider import get_chat_model_provider
@@ -30,17 +31,39 @@ def get_assistant_message(*, session, user_msg: ChatMessage):
 
     # 3)ADD system/chat prompts + latest 30 messages
     messages = []
+
+    # Existing system prompts (host, product)
     messages.extend(build_system_prompts(
-        host_profile=session.host.host_profile, product=session.product
+        host_profile=session.host.host_profile,
+        product=session.product
     ))
 
-    # summary + live window
+    # Conversation summary
     if session.summary:
         messages.append({
             "role": "system",
-            "content": f"Conversation summary: {session.summary}"
+            "content": f"Conversation summary:\n\n {session.summary}"
         })
-    messages.extend(get_chat_context(session=session))
+
+    # Current time system prompt
+    messages.append({
+        "role": "system",
+        "content": (
+            f"Current time: {timezone.now().strftime("%Y-%m-%d %H:%M")}\n"
+            "Each message has a timestamp and type (text, voice, call). "
+            "Use this information to understand timing and communication context naturally, "
+            "but do not include the timestamps in your responses unless explicitly asked."
+        )
+    })
+
+    # Latest chat messages
+    raw_messages = get_chat_context(session=session)
+
+    messages.extend(raw_messages)
+
+    # # ########## PROMPTS DEBUG ##########
+    # print(messages)
+    # # ########## END OF PROMPTS DEBUG ##########
 
     # 4)Call LLM
     model = resolve_model(profile=session.host.host_profile, usecase=CHAT)

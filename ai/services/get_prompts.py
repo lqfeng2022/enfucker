@@ -4,7 +4,7 @@ from django.core.cache import cache
 PROMPT_TTL = 60 * 60 * 24  # 24 hours
 
 
-def get_host_base_context(profile):
+def build_host_base_context(profile):
     base = profile.base_prompt
     return None if not base else {
         'name': base.name,
@@ -12,7 +12,7 @@ def get_host_base_context(profile):
     }
 
 
-def get_host_persona_context(profile):
+def build_host_persona_context(profile):
     persona = profile.persona_prompt
 
     return None if not persona else {
@@ -26,7 +26,7 @@ def get_host_persona_context(profile):
     }
 
 
-def get_enhancement_instructions(slug='elevenlabs-enhancement'):
+def build_enhancement_instructions(slug='elevenlabs-enhancement'):
     cache_key = f'prompt:db:{slug}'
 
     cached = cache.get(cache_key)
