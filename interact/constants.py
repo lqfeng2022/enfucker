@@ -1,2 +1,2 @@
-SUMMARY_WINDOW = 50
-CHAT_CONTEXT_LIMIT = 50  # same number on purpose
+SUMMARY_WINDOW = 30
+CHAT_CONTEXT_LIMIT = 30  # same number on purpose
