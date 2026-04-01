@@ -30,6 +30,7 @@ INSTALLED_APPS = [
     'interact',
     'ai',
     'billing',
+    'memory',
 ]
 
 

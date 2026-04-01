@@ -25,10 +25,10 @@ def format_text(text: str) -> str:
 
     text = normalize_text(text)
 
-    # Remove markdown emphasis
+    # Remove all asterisks
     text = text.replace('*', '')
 
-    # Add space around em-dash if missing
+    # Use space instead of em-dash
     text = re.sub(r'\s*—\s*', ' ', text)
 
     # Collapse multiple newlines → max 1

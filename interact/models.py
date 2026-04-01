@@ -334,3 +334,42 @@ class DebitLedger(models.Model):
 
     class Meta:
         ordering = ['created_at']
+
+
+# interact_sessionsummary
+class SessionSummary(AbstractCommon):
+    session = models.OneToOneField(ChatSession, on_delete=models.CASCADE)
+
+    # Core summary
+    summary = models.TextField()
+
+    # Structured insights (THIS FIXES YOUR PROBLEM)
+    key_topics = models.JSONField(default=list, blank=True)
+    user_intents = models.JSONField(default=list, blank=True)
+
+    # Language learning specific
+    vocabulary = models.JSONField(default=list, blank=True)
+    grammar_issues = models.JSONField(default=list, blank=True)
+
+    # Conversation behavior
+    speaking_style = models.JSONField(default=dict, blank=True)
+    corrections_given = models.JSONField(default=list, blank=True)
+
+    # Important highlights
+    key_moments = models.JSONField(default=list, blank=True)
+    # Example: [{"message_id": 123, "timestamp": "2026-04-01T10:12:00Z", "type": "funny"}]
+
+    # json version(keys) control 
+    json_version = models.IntegerField(default=1)
+    
+    # meta data
+    message_count = models.IntegerField(default=0)
+
+    user_audio_duration = models.IntegerField(default=0)
+    host_audio_duration = models.IntegerField(default=0)
+
+    call_count = models.IntegerField(default=0)
+    call_duration = models.IntegerField(default=0)
+
+    def __str__(self):
+        return f"SessionSummary<{self.session_id}>"
