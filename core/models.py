@@ -19,9 +19,13 @@ class User(AbstractUser):
 
 # core_profile
 class Profile(AbstractCommon):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    user = models.OneToOneField(User, on_delete=models.CASCADE,
+                                related_name='user_profile')
+
     city = models.ForeignKey(settings.STORE_CITY_MODEL, on_delete=models.PROTECT,
                              null=True, blank=True, related_name='user_profiles')
+
+    timezone = models.CharField(max_length=50, default='UTC')  # "Asia/Tokyo"
 
     phone = models.CharField(max_length=255, blank=True)  # optional field
     # null=True (db level behavior), blank=True, both needed

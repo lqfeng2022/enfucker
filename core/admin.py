@@ -6,8 +6,8 @@ from .models import User, UserLog, Profile
 
 @admin.register(User)
 class UserAdmin(BaseUserAdmin):
-    list_display = ['id', 'username', 'first_name', 'last_name',
-                    'email', 'is_staff', 'is_active', 'date_joined', 'last_login']
+    list_display = ['id', 'username', 'first_name', 'last_name', 'email',
+                    'is_staff', 'is_active', 'formatted_data_joined', 'formatted_last_login']
     list_per_page = 20
 
     list_filter = ['is_staff', 'is_superuser', 'is_active']
@@ -27,6 +27,16 @@ class UserAdmin(BaseUserAdmin):
         }),
     )
 
+    def formatted_data_joined(self, obj):
+        value = obj.date_joined
+        return '_' if not value else value.strftime('%b %d, %Y')
+    formatted_data_joined.short_description = 'Joined At'
+
+    def formatted_last_login(self, obj):
+        value = obj.last_login
+        return '_' if not value else value.strftime('%b %d, %Y')
+    formatted_last_login.short_description = 'Last Login'
+
 
 @admin.register(UserLog)
 class UseragentAdmin(FormattedUpdateDateMixin, admin.ModelAdmin):
@@ -43,7 +53,7 @@ class UseragentAdmin(FormattedUpdateDateMixin, admin.ModelAdmin):
 @admin.register(Profile)
 class ProfileAdmin(FormattedUpdateDateMixin, admin.ModelAdmin):
     list_display = ['id', 'user', 'first_name', 'last_name', 'bro', 'city',
-                    'formatted_updated_at']
+                    'timezone', 'formatted_updated_at']
     list_per_page = 15
 
     # prefetch the related user, avoid N + 1 queries problem

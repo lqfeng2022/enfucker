@@ -8,6 +8,7 @@ from interact.models import ChatMessage
 from interact.tasks import summarize_session_task
 from interact.utils.recorder import record_usage
 from interact.utils.credits import require_credits
+from interact.utils.timezone import local_time_for_user
 from interact.services.chat_prompts import build_system_prompts
 from interact.services.chat_messages import get_chat_context
 import logging
@@ -46,10 +47,15 @@ def get_assistant_message(*, session, user_msg: ChatMessage):
         })
 
     # Current time system prompt
+
+    dt = timezone.now()  # UTC
+    user_profile = session.user.user_profile  # user_profile
+    local_dt = local_time_for_user(dt=dt, user=user_profile)
+
     messages.append({
         "role": "system",
         "content": (
-            f"Current time: {timezone.now().strftime("%Y-%m-%d %H:%M")}\n"
+            f"Current time: {local_dt.strftime("%Y-%m-%d %H:%M")}\n"
             "Each message has a timestamp and type (text, voice, call). "
             "Use this information to understand timing and communication context naturally, "
             "but do not include the timestamps in your responses unless explicitly asked."
@@ -61,9 +67,9 @@ def get_assistant_message(*, session, user_msg: ChatMessage):
 
     messages.extend(raw_messages)
 
-    # # ########## PROMPTS DEBUG ##########
-    # print(messages)
-    # # ########## END OF PROMPTS DEBUG ##########
+    # ########## PROMPTS DEBUG ##########
+    print(messages)
+    # ########## END OF PROMPTS DEBUG ##########
 
     # 4)Call LLM
     model = resolve_model(profile=session.host.host_profile, usecase=CHAT)
