@@ -257,7 +257,7 @@ class ChatMessage(models.Model):
     TYPE_CHOICES = [('text', 'Text'), ('audio', 'STT'), ('call', 'Call')]
 
     created_at = models.DateTimeField(auto_now_add=True)
-    
+
     visible = models.BooleanField(default=True)
     session = models.ForeignKey(ChatSession, on_delete=models.CASCADE,
                                 related_name='messages')
@@ -279,6 +279,15 @@ class ChatMessage(models.Model):
 
     cost = models.DecimalField(max_digits=12, decimal_places=6, default=0,
                                help_text="Cached sum of ModelUsage costs (derived)")
+
+    def save(self, *args, **kwargs):
+        if self.call_session_id:
+            self.type = 'call'
+        elif self.is_voice:
+            self.type = 'audio'
+        else:
+            self.type = 'text'
+        super().save(*args, **kwargs)
 
     def __str__(self) -> str:
         return f'{self.id}'
