@@ -1,3 +1,4 @@
+# interact/tasks.py
 from celery import shared_task
 from interact.usecases.summary import maybe_summarize_session
 from interact.models import ChatSession
