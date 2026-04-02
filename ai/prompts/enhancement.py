@@ -20,7 +20,7 @@ def build_elevenlabs_prompt(instructions: str | None):
 
     # Normalize and build prompt
     blocks = [
-        '=== ENHANCEMENT INSTRUCTIONS ===',
+        f"ENHANCEMENT INSTRUCTIONS",
         normalize_text(instructions),
     ]
 

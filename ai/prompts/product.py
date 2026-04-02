@@ -2,11 +2,12 @@ from ai.utils.normalizetext import normalize_text
 
 
 def build_product_prompt(product_context: dict | None):
+    if product_context is None:
+        return
+
     blocks = [
-        '=== TOPIC CONTEXT ===',
-        f"# Topic type: {
-            product_context['type'] if product_context else 'a FREE topic'
-        }"
+        f"# TOPIC CONTEXT",
+        f"# Topic type: {product_context['type']}"
     ]
 
     if product_context['type'] == 'Expression':
@@ -36,7 +37,7 @@ def build_product_prompt(product_context: dict | None):
                 f"# Video:\n{normalize_text(product_context['video'])}"
             )
 
-    blocks.append(f"# End of Topic Context")
+    blocks.append(f"# END of TOPIC CONTEXT")
 
     result = normalize_text(
         '\n\n'.join(b.strip() for b in blocks if b and b.strip())

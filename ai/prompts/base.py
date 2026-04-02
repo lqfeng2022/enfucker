@@ -6,10 +6,10 @@ def build_base_prompt(base_context):
         return ''
 
     blocks = [
-        '=== BASE INSTRUCTIONS ===',
+        f"# BASE INSTRUCTIONS",
         f"# Role: {normalize_text(base_context['name'])}",
         normalize_text(base_context['content']),
-        f'# End of Base Instructions'
+        f'# END of Base Instructions'
     ]
 
     result = normalize_text('\n\n'.join(blocks))

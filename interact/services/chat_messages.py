@@ -1,4 +1,3 @@
-from django.utils import timezone
 from interact.constants import CHAT_CONTEXT_LIMIT
 from interact.utils.timezone import local_time_for_user
 
@@ -14,9 +13,6 @@ TYPE_LABELS = {
 def get_chat_context(*, session):
     """Returns messages AFTER the last summary point."""
     queryset = session.messages.filter(visible=True)
-
-    if session.summary_upto_message_id:
-        queryset = queryset.filter(id__gt=session.summary_upto_message_id)
 
     raw_messages = (
         queryset.order_by('-created_at')  # newest → oldest
