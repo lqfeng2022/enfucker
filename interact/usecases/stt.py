@@ -26,7 +26,7 @@ def create_user_message(*, session, content=None, audio=None):
         role=ChatMessage.USER,
         content=validated['content'],
         audio=validated['audio'],
-        is_voice=False,
+        is_voice=bool(validated['audio']),
     )
 
     if validated['audio']:

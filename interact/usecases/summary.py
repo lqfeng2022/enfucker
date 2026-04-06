@@ -29,7 +29,8 @@ def maybe_summarize_session(*, session):
     for m in unsummarized:
         content = (m.content or '').strip()
         if content:
-            lines.append(f"{m.role}: {content}")
+            role = m.role.upper()
+            lines.append(f"[{role}]\n{content}")
 
     if not lines:
         return

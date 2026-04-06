@@ -278,8 +278,10 @@ class ChatMessage(models.Model):
                              blank=True)
     audio_seconds = models.IntegerField(blank=True, default=0)
 
-    cost = models.DecimalField(max_digits=12, decimal_places=6, default=0,
-                               help_text="Cached sum of ModelUsage costs (derived)")
+    cost = models.DecimalField(max_digits=12, decimal_places=6, default=0)
+
+    event = models.ForeignKey('SessionEvent', null=True, blank=True,
+                              on_delete=models.SET_NULL, related_name='messages')
 
     def save(self, *args, **kwargs):
         if self.call_session_id:
@@ -350,37 +352,41 @@ class DebitLedger(models.Model):
         ordering = ['created_at']
 
 
+# interact_messagerewrite
+# learning-specific, content rewrite & vocab/phrase capture
+class MessageRewrite(models.Model):
+    created_at = models.DateTimeField(auto_now_add=True)
+    message = models.ForeignKey(ChatMessage, on_delete=models.CASCADE,
+                                related_name='learning')
+
+    content = models.TextField()  # call LLM rewrite user message
+
+    vocabulary = models.JSONField(default=list, blank=True)
+    phrase = models.JSONField(default=list, blank=True)
+    note = models.JSONField(default=list, blank=True)
+
+    def __str_(self):
+        return f"MessageRewrite<{self.id}>"
+
+
 # interact_sessionevent
-# event-specific, actionable language capture
-class SessionEvent(AbstractCommon):
+# event-specific, daily event memory capture
+class SessionEvent(models.Model):
+    created_at = models.DateTimeField(auto_now_add=True)
     session = models.ForeignKey(ChatSession, on_delete=models.CASCADE,
                                 related_name='events')
 
     title = models.CharField(max_length=255)
-    happened_at = models.DateTimeField(auto_now_add=True)
-
-    user_version = models.TextField()
-    improved_version = models.TextField()
-
-    vocabulary = models.JSONField(default=list, blank=True)
-    phrase = models.JSONField(decoder=list, blank=True)
-
-    notes = models.JSONField(default=list, blank=True)
+    content = models.TextField()
+    topics = models.JSONField(default=list, blank=True)
 
     def __str_(self):
         return f"SessionEvent<{self.title}>"
 
     # {
     #   "title": "Lunch: jiaozi meal",
-    #   "happened_at": "",
-    #   "user_version": "I eat jiaozi with carrot and radish and sauce bar",
-    #   "improved_version": "I had dumplings for lunch with a mix of shredded carrot and radish, and I made my own dipping sauce.",
-    #   "vocabulary": ["dumplings", "shredded"],
-    #   "phrase": ["have lunch", "shredded carrot", "make dipping sauce"]
-    #   "notes": [
-    #     "Use 'had' instead of 'eat' for past events",
-    #     "'sauce bar' → 'dipping sauce' or 'condiment station'"
-    #   ],
+    #   "content": "I eat jiaozi with carrot and radish and sauce bar",
+    #   "topics": ["lunch", "Jiaozi", "Sauce"],
     # }
 
 
@@ -392,43 +398,20 @@ class SessionSummary(AbstractCommon):
 
     # Core structured summary (simple memory for LLM)
     summary = models.JSONField(default=dict)
-    # {
-    #   "focus": "daily storytelling",
-    #   "common_topics": ["food", "daily routine", "personal thoughts", "dreams"],
-    #   "notes": "Focus on short, clear, natural sentences. Track repeated themes for learning."
-    # }
 
-    # User speaking style (important for adapting agent replies)
-    speaking_style = models.JSONField(default=dict, blank=True)
-    # {
-    #   "tone": "casual",
-    #   "sentence_length": "short",
-    #   "fluency": "intermediate"
-    # }
-
-    # Optional progress marker
-    progress = models.JSONField(default=dict, blank=True)
-    # {
-    #   "vocabulary_covered": 45,
-    #   "grammar_patterns": 10,
-    #   "phrases_mastered": 12,
-    #   "events_logged": 5
-    # }
+    # User speaking style
+    style = models.JSONField(default=dict, blank=True)
 
     # Agent adaptation
     # This is what makes your agent feel "smart over time".
-    teaching_strategy = models.JSONField(default=dict, blank=True)
-    # {
-    #   "preferred_correction_style": "inline",
-    #   "effective_methods": ["example sentences", "gentle correction"],
-    #   "ineffective_methods": ["long grammar explanations"],
-    #   "recommended_next_methods": ["role play", "guided conversation"]
-    # }
+    strategy = models.JSONField(default=dict, blank=True)
 
     # Meta info
     message_count = models.IntegerField(default=0)
+
     user_audio_duration = models.IntegerField(default=0)
     host_audio_duration = models.IntegerField(default=0)
+
     call_count = models.IntegerField(default=0)
     call_duration = models.IntegerField(default=0)
 

@@ -85,9 +85,9 @@ class Host(AbstractCommon):
                                  blank=True, null=True)
     cover = models.ImageField(upload_to='store/image/host-back',
                               blank=True, null=True)
+
     audio_intro = models.FileField(upload_to='store/audio/host-intro',
                                    blank=True, null=True)
-
     description = models.CharField(max_length=255, null=True)
 
     def __str__(self) -> str:
