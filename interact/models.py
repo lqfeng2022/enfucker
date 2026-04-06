@@ -371,8 +371,7 @@ class MessageRewrite(models.Model):
 
 # interact_sessionevent
 # event-specific, daily event memory capture
-class SessionEvent(models.Model):
-    created_at = models.DateTimeField(auto_now_add=True)
+class SessionEvent(AbstractCommon):
     session = models.ForeignKey(ChatSession, on_delete=models.CASCADE,
                                 related_name='events')
 

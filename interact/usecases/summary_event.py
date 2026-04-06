@@ -7,7 +7,7 @@ from ai.services.get_aimodel import resolve_model
 from ai.prompts.event import get_event_summary_prompt
 from ai.contracts import SUMMARY
 from interact.utils.recorder import record_usage
-from interact.models import SessionEvent, ChatMessage
+from interact.models import ChatMessage, SessionEvent
 import pytz
 import json
 import re
@@ -219,44 +219,58 @@ def _parse_and_create_session_events(*, session, content: str, chunk_messages: l
     Also assign the chunk messages to the created event.
     """
     events_data = _extract_json(content)
-    if not isinstance(events_data, list):
+    if not isinstance(events_data, list) or not events_data:
         logger.warning("Invalid events format",
                        extra={"session_id": session.id})
         return
 
-    events_to_create = []
-    for e in events_data:
-        try:
-            if not e.get('content'):
-                continue
-
-            event = SessionEvent(
-                session=session,
-                title=(e.get('title') or '')[:255],
-                content=(e.get('content') or ''),
-                topics=_ensure_list(e.get('topics')),
+    # If any message already has an event, update that existing event
+    existing_event_ids = {m.event_id for m in chunk_messages if m.event_id}
+    existing_event = None
+    if existing_event_ids:
+        if len(existing_event_ids) > 1:
+            logger.warning(
+                "Chunk has messages from multiple events, using first",
+                extra={"session_id": session.id,
+                       "event_ids": list(existing_event_ids)}
             )
-            events_to_create.append(event)
+        existing_event = ChatMessage.objects.filter(
+            event_id__in=existing_event_ids
+        ).values_list('event_id', flat=True).first()
+        if existing_event:
+            existing_event = SessionEvent.objects.get(id=existing_event)
 
-        except Exception as ex:
-            logger.warning("Invalid event skipped",
-                           extra={"error": str(ex), "session_id": session.id})
-            continue
+    # Use the first valid event payload only; each chunk should map to one event.
+    event_payload = None
+    for e in events_data:
+        if e.get('content'):
+            event_payload = e
+            break
 
-    if not events_to_create:
+    if not event_payload:
         return
 
-    # Create SessionEvent objects and assign messages
-    created_events = []
-    for event in events_to_create:
-        event.save()
-        created_events.append(event)
-
-    # One chunk maps to one event, so attach all chunk messages to the first created event.
-    if created_events:
-        ChatMessage.objects.filter(id__in=[m.id for m in chunk_messages]).update(
-            event=created_events[0]
+    if existing_event:
+        existing_event.title = (event_payload.get('title') or '')[:255]
+        existing_event.content = (event_payload.get('content') or '')
+        existing_event.topics = _ensure_list(event_payload.get('topics'))
+        existing_event.save(
+            update_fields=['title', 'content', 'topics', 'updated_at']
         )
+        ChatMessage.objects.filter(id__in=[m.id for m in chunk_messages]).update(
+            event=existing_event
+        )
+        return
+
+    event = SessionEvent(
+        session=session,
+        title=(event_payload.get('title') or '')[:255],
+        content=(event_payload.get('content') or ''),
+        topics=_ensure_list(event_payload.get('topics')),
+    )
+    event.save()
+    ChatMessage.objects.filter(
+        id__in=[m.id for m in chunk_messages]).update(event=event)
 
 
 def _extract_json(content: str):
