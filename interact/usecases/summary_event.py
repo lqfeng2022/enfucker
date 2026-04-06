@@ -246,14 +246,17 @@ def _parse_and_create_session_events(*, session, content: str, chunk_messages: l
     if not events_to_create:
         return
 
-    # Bulk create SessionEvent
-    SessionEvent.objects.bulk_create(events_to_create)
-
-    # Assign messages to events (one-to-one chunk → event mapping)
+    # Create SessionEvent objects and assign messages
+    created_events = []
     for event in events_to_create:
-        event.save()  # now event.id exists
-        ChatMessage.objects.filter(id__in=[m.id for m in chunk_messages]). \
-            update(event=event)
+        event.save()
+        created_events.append(event)
+
+    # One chunk maps to one event, so attach all chunk messages to the first created event.
+    if created_events:
+        ChatMessage.objects.filter(id__in=[m.id for m in chunk_messages]).update(
+            event=created_events[0]
+        )
 
 
 def _extract_json(content: str):
