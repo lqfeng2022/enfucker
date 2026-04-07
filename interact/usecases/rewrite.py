@@ -23,6 +23,11 @@ def session_message_rewrite(*, message: ChatMessage):
     # Use the session.language (denormalized, fast!)
     language_code = getattr(message.session, "language", "en")
 
+    print("########## DEBUG CODE ##########")
+    print(language_code)
+    print(get_user_rewrite_prompt(language_code))
+    print("########## DEBUG CODE ##########")
+
     # build prompts (system + messages)
     messages_payload = [
         {"role": "system", "content": get_user_rewrite_prompt(language_code)},
@@ -43,6 +48,9 @@ def session_message_rewrite(*, message: ChatMessage):
 
     # Extract json data then store in DB
     content = result.get('content') or ''
+    print("########## DEBUG CODE ##########")
+    print(content)
+    print("########## DEBUG CODE ##########")
     _parse_and_rewrite_message(message=message, content=content)
 
     # Record token usage
@@ -61,6 +69,9 @@ def session_message_rewrite(*, message: ChatMessage):
 def _parse_and_rewrite_message(*, message, content: str):
     """Parse LLM JSON result and store/update MessageRewrite object (one-to-one)."""
     learning_data = _extract_json(content)
+    print("########## DEBUG CODE ##########")
+    print(learning_data)
+    print("########## DEBUG CODE ##########")
     if not isinstance(learning_data, list):
         logger.warning("Invalid learning format")
         return
@@ -88,18 +99,33 @@ def _parse_and_rewrite_message(*, message, content: str):
 
 
 def _extract_json(content: str):
-    """Extract JSON array from LLM output."""
+    """Extract JSON array from LLM output (handles markdown + raw JSON)."""
+    if not content:
+        return []
+
+    content = content.strip()
+
+    # Case 1: markdown ```json ... ```
+    if content.startswith("```"):
+        lines = content.splitlines()
+
+        # remove first line ``` or ```json
+        if lines[0].startswith("```"):
+            lines = lines[1:]
+
+        # remove last line ```
+        if lines and lines[-1].startswith("```"):
+            lines = lines[:-1]
+
+        content = "\n".join(lines).strip()
+
+    # Now it should be pure JSON
     try:
         return json.loads(content)
-    except json.JSONDecodeError:
-        # fallback: try to extract JSON block
-        match = re.search(r'\[.*?\]', content, re.DOTALL)
-        if match:
-            try:
-                return json.loads(match.group())
-            except Exception:
-                return []
-    return []
+    except json.JSONDecodeError as e:
+        logger.warning("JSON decode failed", extra={
+                       "error": str(e), "content": content})
+        return []
 
 
 def _ensure_list(val):

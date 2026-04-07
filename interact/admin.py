@@ -117,8 +117,6 @@ class ChatMessageInline(AudioThumbnailMixin, admin.StackedInline):
 @admin.register(models.ChatSession)
 class ChatSessionAdmin(ChatMessageCountMinxin, FormattedUpdateDateMixin,
                        admin.ModelAdmin):
-    inlines = [ChatMessageInline]
-
     list_display = ['id', 'user', 'host', 'product__type', 'product', 'messages_count',
                     'visible', 'cost', 'formatted_updated_at']
     list_per_page = 15
