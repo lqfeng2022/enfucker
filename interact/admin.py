@@ -132,10 +132,37 @@ class ChatSessionAdmin(ChatMessageCountMinxin, FormattedUpdateDateMixin,
     ordering = ['-updated_at']
 
 
+@admin.register(models.SessionEvent)
+class SessionEventAdmin(FormattedCreateDateMixin, admin.ModelAdmin):
+    inlines = [ChatMessageInline]
+
+    list_display = ['id', 'title', 'topics', 'session__host',
+                    'formatted_created_at']
+    list_per_page = 15
+    list_filter = ['created_at']
+
+    search_fields = ['title', 'topics']
+    related_field = 'session_id'
+
+    ordering = ['-updated_at']
+
+
+class MessageRewriteInline(admin.StackedInline):
+    model = models.MessageRewrite
+
+    fields = ['id', 'content', 'vocabulary', 'phrase', 'note']
+
+    extra = 0
+    min_num = 0
+    max_num = 1
+
+
 # B)ChatMessage admin
 @admin.register(models.ChatMessage)
 class ChatMessageAdmin(AudioThumbnailMixin, ChatSessionLinkMixin, FormattedCreateDateMixin,
                        admin.ModelAdmin):
+    inlines = [MessageRewriteInline]
+
     list_display = ['id', 'role', 'display_content', 'audio_seconds', 'session_link',
                     'cost', 'formatted_created_at']
     list_per_page = 13
@@ -143,8 +170,10 @@ class ChatMessageAdmin(AudioThumbnailMixin, ChatSessionLinkMixin, FormattedCreat
 
     # list_editable = ['is_voice']
     search_fields = ['session__id']
+    autocomplete_fields = ['event']
     readonly_fields = ['cost', 'session', 'role', 'audio_seconds', 'content',
-                       'audio', 'is_voice', 'thumbnail']
+                       'is_enhancement', 'enhanced_content', 'audio', 'is_voice',
+                       'thumbnail']
 
     def display_content(self, obj):
         if not obj.content:

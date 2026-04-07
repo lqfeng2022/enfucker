@@ -28,7 +28,7 @@ class Follow(AbstractCommon):
 
     class Meta:
         unique_together = ('user', 'host')  # prevent duplicates
-        verbose_name_plural = 'Followings'
+        verbose_name_plural = 'User Followings'
         ordering = ['id']
 
 
@@ -45,7 +45,7 @@ class Search(AbstractCommon):
 
     class Meta:
         unique_together = ('user', 'content')
-        verbose_name_plural = 'Searches'
+        verbose_name_plural = 'User Searches'
         ordering = ['-created_at']
 
 
@@ -64,7 +64,7 @@ class UserView(AbstractCommon):
 
     class Meta:
         unique_together = [('user', 'product')]
-        verbose_name_plural = 'Histories'
+        verbose_name_plural = 'User Histories'
         ordering = ['-updated_at']
 
 
@@ -82,6 +82,7 @@ class Like(AbstractCommon):
 
     class Meta:
         unique_together = [('user', 'product')]
+        verbose_name_plural = 'User Likes'
         ordering = ['-created_at']
 
 
@@ -119,6 +120,7 @@ class Collection(AbstractCommon):
 
     class Meta:
         unique_together = [('user', 'title')]
+        verbose_name_plural = 'User Collections'
         ordering = ['-created_at']
 
 
@@ -136,6 +138,7 @@ class CollectionItem(AbstractCommon):
 
     class Meta:
         unique_together = [('collection', 'product')]
+        verbose_name_plural = 'User Collection Items'
         ordering = ['-created_at']
 
 
@@ -149,6 +152,7 @@ class SavedPlaylist(models.Model):
 
     class Meta:
         unique_together = [('user', 'playlist')]
+        verbose_name_plural = 'User Saved Playlist'
         ordering = ['-saved_at']
 
 
@@ -162,6 +166,7 @@ class SavedCourse(models.Model):
 
     class Meta:
         unique_together = [('user', 'course')]
+        verbose_name_plural = 'User Saved Course'
         ordering = ['-saved_at']
 
 
@@ -205,7 +210,7 @@ class ChatSession(AbstractCommon):
     call_audio_seconds = models.PositiveIntegerField(default=0)
 
     def __str__(self) -> str:
-        return f'{self.id}'
+        return f"Chat Session - {self.id}"
 
     def save(self, *args, **kwargs):
         self.product_key = self.product_id or 0
@@ -220,6 +225,7 @@ class ChatSession(AbstractCommon):
 
     class Meta:
         unique_together = [('user', 'host', 'product_key')]
+        verbose_name_plural = 'Chat Sessions'
         ordering = ['-updated_at']
 
 
@@ -261,7 +267,7 @@ class CallSession(models.Model):
         self.save(update_fields=['ended_at', 'duration_seconds', 'state'])
 
     class Meta:
-        verbose_name_plural = 'Call Sessions'
+        verbose_name_plural = 'Chat Call Sessions'
         ordering = ['-started_at']
 
 
@@ -270,7 +276,7 @@ class ChatMessage(models.Model):
     USER, ASSISTANT = 'user', 'assistant'
     ROLE_CHOICES = [(USER, 'User'), (ASSISTANT, 'Assistant')]
 
-    TYPE_CHOICES = [('text', 'Text'), ('audio', 'STT'), ('call', 'Call')]
+    TYPE_CHOICES = [('text', 'Text'), ('audio', 'Audio'), ('call', 'Call')]
 
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -312,7 +318,7 @@ class ChatMessage(models.Model):
         return f'{self.id}'
 
     class Meta:
-        verbose_name_plural = 'Chat Messages'
+        verbose_name_plural = 'Chat Session Messages'
         ordering = ['created_at']
 
 
@@ -344,7 +350,7 @@ class ModelUsage(models.Model):
         return f'{self.units}'
 
     class Meta:
-        verbose_name_plural = 'Model Usages'
+        verbose_name_plural = 'Chat Model Usages'
         ordering = ['id']
         indexes = [models.Index(fields=['step']),
                    models.Index(fields=['created_at'])]
@@ -365,6 +371,7 @@ class DebitLedger(models.Model):
         return f'{self.amount} credits'
 
     class Meta:
+        verbose_name_plural = 'User Debit Ledgers'
         ordering = ['created_at']
 
 
@@ -380,8 +387,8 @@ class MessageRewrite(AbstractCommon):
     phrase = models.JSONField(default=list, blank=True)
     note = models.JSONField(default=list, blank=True)
 
-    def __str_(self):
-        return f"MessageRewrite<{self.id}>"
+    def __str__(self):
+        return f"MessageRewrite - {self.id}"
 
 
 # interact_sessionevent
@@ -394,8 +401,11 @@ class SessionEvent(AbstractCommon):
     content = models.TextField()
     topics = models.JSONField(default=list, blank=True)
 
-    def __str_(self):
-        return f"SessionEvent<{self.title}>"
+    def __str__(self):
+        return f"{self.title} - {self.id}"
+
+    class Meta:
+        verbose_name_plural = 'Chat Session Events'
 
     # {
     #   "title": "Lunch: jiaozi meal",
@@ -434,3 +444,6 @@ class SessionSummary(AbstractCommon):
 
     def __str__(self):
         return f"SessionSummary<{self.session_id}>"
+
+    class Meta:
+        verbose_name_plural = 'Chat Session Summary'

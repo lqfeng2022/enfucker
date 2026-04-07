@@ -15,7 +15,7 @@ from store.services.product_sync import sync_products_host_for_video
 # 0)Language admin
 @admin.register(Language)
 class LanguageAdmin(FormattedUpdateDateMixin, admin.ModelAdmin):
-    list_display = ['id', 'title', 'slug', 'formatted_updated_at']
+    list_display = ['id', 'title', 'slug', 'code', 'formatted_updated_at']
     list_per_page = 15
     list_filter = ['updated_at']
 
@@ -80,7 +80,7 @@ class AlphabetAdmin(ExpressionCountMixin, admin.ModelAdmin):
 @admin.register(Host)
 class HostAdmin(ThumbnailMixin, ProductCountMixin, FormattedUpdateDateMixin,
                 admin.ModelAdmin):
-    list_display = ['id', 'name', 'slug', 'product_count',
+    list_display = ['id', 'name', 'language', 'product_count',
                     'formatted_updated_at']
     list_per_page = 12
     list_filter = ['updated_at']
