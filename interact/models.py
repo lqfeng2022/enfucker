@@ -167,10 +167,19 @@ class SavedCourse(models.Model):
 
 # interact_chatsession
 class ChatSession(AbstractCommon):
+    LANGUAGE_CHOICES = [
+        ("en", "English"),
+        ("ja", "Japanese"),
+        ("zh", "Chinese"),
+        ("fr", "French"),
+    ]
+
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
                              related_name='chat_sessions')
     host = models.ForeignKey(settings.STORE_HOST_MODEL, on_delete=models.CASCADE,
                              related_name='chat_sessions')
+
+    language = models.CharField(max_length=10, choices=LANGUAGE_CHOICES)
 
     product = models.ForeignKey(settings.STORE_PRODUCT_MODEL, on_delete=models.SET_NULL,
                                 null=True, blank=True, related_name='chat_sessions')
@@ -200,6 +209,13 @@ class ChatSession(AbstractCommon):
 
     def save(self, *args, **kwargs):
         self.product_key = self.product_id or 0
+
+        # Set language from host (only if not already set)
+        if not self.language and self.host_id:
+            # Avoid extra query if possible
+            if hasattr(self.host, "language") and self.host.language:
+                self.language = self.host.language.code
+
         super().save(*args, **kwargs)
 
     class Meta:

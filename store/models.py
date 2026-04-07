@@ -13,6 +13,7 @@ class AbstractCommon(models.Model):
 
 # store_language
 class Language(AbstractCommon):
+    code = models.CharField(max_length=10, default='en')
     title = models.CharField(max_length=255)
     slug = models.SlugField()
 
@@ -80,6 +81,9 @@ class Alphabet(AbstractCommon):
 class Host(AbstractCommon):
     name = models.CharField(max_length=255)
     slug = models.SlugField()
+
+    language = models.ForeignKey(Language, on_delete=models.PROTECT,
+                                 related_name='hosts')
 
     portrait = models.ImageField(upload_to='store/image/host-avatar',
                                  blank=True, null=True)

@@ -20,9 +20,12 @@ def session_message_rewrite(*, message: ChatMessage):
         logger.info("No messages for session event summary")
         return
 
+    # Use the session.language (denormalized, fast!)
+    language_code = getattr(message.session, "language", "en")
+
     # build prompts (system + messages)
     messages_payload = [
-        {"role": "system", "content": get_user_rewrite_prompt()},
+        {"role": "system", "content": get_user_rewrite_prompt(language_code)},
         {"role": "user", "content": message.content}
     ]
 
