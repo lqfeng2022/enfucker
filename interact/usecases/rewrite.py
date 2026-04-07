@@ -42,12 +42,6 @@ def session_message_rewrite(*, message: ChatMessage):
     content = result.get('content') or ''
     _parse_and_rewrite_message(message=message, content=content)
 
-    ##### CLEAN PRINT FOR DEBUG #####
-    print("\n=== LLM SUMMARY EVENT ===")
-    print(content)
-    print("=============\n")
-    ##### END OF CLEAN PRINT #####
-
     # Record token usage
     usage = result.get('usage', {}) or {}
     if usage.get('input_cached_tokens'):
@@ -62,43 +56,32 @@ def session_message_rewrite(*, message: ChatMessage):
 
 
 def _parse_and_rewrite_message(*, message, content: str):
-    """Parse LLM JSON result and store SessionMessage objects."""
+    """Parse LLM JSON result and store/update MessageRewrite object (one-to-one)."""
     learning_data = _extract_json(content)
     if not isinstance(learning_data, list):
         logger.warning("Invalid learning format")
         return
 
-    learning_to_create = []
-    for e in learning_data:
-        try:
-            if not e.get('content'):
-                continue
+    # Only take the first item since it's one-to-one
+    e = learning_data[0]
+    if not e.get("content"):
+        logger.warning("Learning content empty, skipped",
+                       extra={"message_id": message.id})
+        return
 
-            rewrite = MessageRewrite(
-                message=message,
-                content=(e.get('content') or ''),
-                vocabulary=_ensure_list(e.get('vocabulary')),
-                phrase=_ensure_list(e.get('phrase')),
-                note=_ensure_list(e.get('note')),
-            )
-            learning_to_create.append(rewrite)
+    # Update existing rewrite or create a new one
+    rewrite, created = MessageRewrite.objects.update_or_create(
+        message=message,
+        defaults={
+            "content": e.get("content", ""),
+            "vocabulary": _ensure_list(e.get("vocabulary")),
+            "phrase": _ensure_list(e.get("phrase")),
+            "note": _ensure_list(e.get("note")),
+        },
+    )
 
-            ##### CLEAN PRINT FOR DEBUG #####
-            print("\n=== MessageLearning Preview ===")
-            print(f"Content: {rewrite.content}")
-            print(f"Vocabulary: {', '.join(rewrite.vocabulary)}")
-            print(f"Phrase: {', '.join(rewrite.phrase)}")
-            print(f"Note: {', '.join(rewrite.note)}")
-            print("============================\n")
-            ##### END OF CLEAN PRINT #####
-
-        except Exception as ex:
-            logger.warning("Invalid learning skipped",
-                           extra={"error": str(ex), "message_id": message.id})
-            continue
-
-    if learning_to_create:
-        MessageRewrite.objects.bulk_create(learning_to_create)
+    action = "Created" if created else "Updated"
+    logger.debug(f"{action} rewrite for message {message.id}")
 
 
 def _extract_json(content: str):

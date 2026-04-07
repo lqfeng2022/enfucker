@@ -354,10 +354,9 @@ class DebitLedger(models.Model):
 
 # interact_messagerewrite
 # learning-specific, content rewrite & vocab/phrase capture
-class MessageRewrite(models.Model):
-    created_at = models.DateTimeField(auto_now_add=True)
-    message = models.ForeignKey(ChatMessage, on_delete=models.CASCADE,
-                                related_name='learning')
+class MessageRewrite(AbstractCommon):
+    message = models.OneToOneField(ChatMessage, on_delete=models.CASCADE,
+                                   related_name='learning')
 
     content = models.TextField()  # call LLM rewrite user message
 

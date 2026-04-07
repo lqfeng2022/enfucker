@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from store.serializers.product import ProductChatSerializer
 from store.serializers.host import HostSimpleSerializer
-from interact.models import ChatMessage, ChatSession
+from interact.models import ChatMessage, ChatSession, MessageRewrite
 from interact.usecases.stt import create_user_message
 from interact.usecases.chat import get_assistant_message
 from interact.usecases.enhancement import assistant_tts_enhancement
@@ -77,13 +77,22 @@ class ChatMessageUpdateSerializer(serializers.ModelSerializer):
         fields = ['visible']
 
 
+class ChatMessageRewriteSerializer(serializers.ModelSerializer):
+    content = serializers.CharField(read_only=True)
+
+    class Meta:
+        model = MessageRewrite
+        fields = ['id', 'content']
+
+
 class ChatMessageSerializer(serializers.ModelSerializer):
     audio = serializers.FileField(read_only=True)
+    rewrite = ChatMessageRewriteSerializer(source='learning', read_only=True)
 
     class Meta:
         model = ChatMessage
         fields = ['id', 'role', 'content', 'audio', 'audio_seconds',
-                  'created_at']
+                  'rewrite', 'created_at']
 
 
 # ChatSession serializers

@@ -4,15 +4,21 @@ from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 from rest_framework.viewsets import GenericViewSet
 from rest_framework.permissions import IsAuthenticated
+from rest_framework import status
 from rest_framework.filters import OrderingFilter
 from rest_framework.mixins import (
     ListModelMixin, RetrieveModelMixin, UpdateModelMixin, CreateModelMixin,
     DestroyModelMixin)
+from rest_framework.decorators import action
+from rest_framework.response import Response
 from interact.permissions import AdminDelete
 from interact.models import ChatSession, ChatMessage
 from interact.serializers.chatsession import (
     ChatSessionAddSerializer, ChatSessionListSerializer, ChatSessionSerializer,
-    ChatMessageAddSerializer, ChatMessageUpdateSerializer, ChatMessageSerializer)
+    ChatMessageAddSerializer, ChatMessageUpdateSerializer, ChatMessageSerializer,
+    ChatMessageRewriteSerializer
+)
+from interact.usecases.rewrite import session_message_rewrite
 from interact.utils.getmodels import get_product_model, get_host_model, get_default_host
 
 
@@ -113,6 +119,8 @@ class ChatMessageViewSet(ListModelMixin, CreateModelMixin, RetrieveModelMixin,
             return ChatMessageAddSerializer
         elif self.action == 'update':
             return ChatMessageUpdateSerializer
+        elif self.action == 'rewrite':
+            return ChatMessageRewriteSerializer
         return ChatMessageSerializer
 
     def get_queryset(self):
@@ -129,3 +137,26 @@ class ChatMessageViewSet(ListModelMixin, CreateModelMixin, RetrieveModelMixin,
             ChatSession, pk=self.kwargs['session_pk'], user=user.id
         )
         return context
+
+    @action(detail=True, methods=['post'], url_path='rewrite')
+    def rewrite(self, request, session_pk=None, pk=None):
+        """Rewrite the selected user message."""
+        message = self.get_object()
+
+        if message.role != ChatMessage.USER:
+            return Response(
+                {"detail": "Only user messages can be rewritten."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # call rewrite only on POST
+        session_message_rewrite(message=message)
+        message.refresh_from_db()
+
+        # fetch or create rewrite
+        rewrite = getattr(message, "learning", None)
+        if not rewrite:
+            return Response({"content": ""}, status=status.HTTP_200_OK)
+
+        serializer = ChatMessageRewriteSerializer(rewrite)
+        return Response(serializer.data, status=status.HTTP_200_OK)
