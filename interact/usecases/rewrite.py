@@ -7,7 +7,6 @@ from ai.contracts import SUMMARY
 from interact.utils.recorder import record_usage
 from interact.models import MessageRewrite, ChatMessage
 import json
-import re
 import logging
 
 

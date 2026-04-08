@@ -36,7 +36,7 @@ def session_event_summary(*, session, max_events_per_day=5, time_gap_minutes=30,
     # Get target messages
     # Get the start and end of target date in user's local time
     user_tz_str = getattr(session.user.user_profile, 'timezone', 'UTC')
-    user_tz = pytz.timezone(user_tz_str)
+    user_tz = pytz.timezone(user_tz_str)  # what if user_tz_str is invalid
 
     now_utc = timezone.now()
     now_local = now_utc.astimezone(user_tz)
@@ -54,7 +54,12 @@ def session_event_summary(*, session, max_events_per_day=5, time_gap_minutes=30,
     start = target_local
     end = target_local + timedelta(days=1)
 
-    messages = list(qs.filter(created_at__gte=start, created_at__lt=end))
+    # Convert boundaries back to UTC
+    start_utc = start.astimezone(pytz.UTC)
+    end_utc = end.astimezone(pytz.UTC)
+
+    messages = list(qs.filter(created_at__gte=start_utc,
+                              created_at__lt=end_utc))
     if not messages:
         logger.info("No messages for session event summary",
                     extra={"session_id": session.id})
@@ -102,6 +107,10 @@ def session_event_summary(*, session, max_events_per_day=5, time_gap_minutes=30,
 
         # Extract json data then store in DB
         content = result.get('content') or ''
+        if not content.strip():
+            logger.warning("Empty LLM response", extra={
+                           "session_id": session.id})
+            continue
         _parse_and_create_session_events(session=session, content=content,
                                          chunk_messages=chunk)
 

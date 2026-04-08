@@ -28,3 +28,7 @@ logs/
 
 # Misc
 note.txt
+
+# Celery Beat persistent schedule
+celerybeat-schedule
+celerybeat-schedule.*

@@ -2,6 +2,7 @@ import os
 from pathlib import Path
 from datetime import timedelta
 from dotenv import load_dotenv
+from celery.schedules import crontab
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -231,6 +232,17 @@ CELERY_TASK_SOFT_TIME_LIMIT = 45  # 45 seconds for soft limit
 # Worker force-kills the task if it’s still running
 CELERY_TASK_TIME_LIMIT = 60  # 60 seconds for hard kill limit
 
+# set timezone
+CELERY_TIMEZONE = "Asia/Shanghai"
+USE_TZ = True
+
+# Configure Celery Beat
+CELERY_BEAT_SCHEDULE = {
+    "daily-session-event-summary": {
+        "task": "interact.tasks.summarize_session_events_task",
+        "schedule": crontab(hour=0, minute=0),  # midnight
+    },
+}
 
 # Redis cache
 CACHES = {
