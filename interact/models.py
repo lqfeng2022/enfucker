@@ -420,30 +420,11 @@ class SessionSummary(AbstractCommon):
     session = models.OneToOneField(ChatSession, on_delete=models.CASCADE,
                                    related_name='sessionsummary')
 
-    # Core structured summary (simple memory for LLM)
-    summary = models.JSONField(default=dict)
-
-    # User speaking style
-    style = models.JSONField(default=dict, blank=True)
-
-    # Agent adaptation
-    # This is what makes your agent feel "smart over time".
-    strategy = models.JSONField(default=dict, blank=True)
-
-    # Meta info
-    message_count = models.IntegerField(default=0)
-
-    user_audio_duration = models.IntegerField(default=0)
-    host_audio_duration = models.IntegerField(default=0)
-
-    call_count = models.IntegerField(default=0)
-    call_duration = models.IntegerField(default=0)
-
-    # JSON versioning (for future updates)
-    json_version = models.IntegerField(default=1)
+    content = models.TextField()  # core summary content
+    topics = models.JSONField(default=list, blank=True)
 
     def __str__(self):
-        return f"SessionSummary<{self.session_id}>"
+        return f"SessionSummary - {self.session_id}"
 
     class Meta:
         verbose_name_plural = 'Chat Session Summary'

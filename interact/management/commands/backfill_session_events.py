@@ -2,7 +2,7 @@
 from django.core.management.base import BaseCommand
 from datetime import timedelta
 from interact.models import ChatSession
-from interact.usecases.summary_event import session_event_summary
+from interact.usecases.event_summary import session_event_summary
 
 
 class Command(BaseCommand):
