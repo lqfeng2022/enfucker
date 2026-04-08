@@ -125,7 +125,7 @@ class ChatSessionAdmin(ChatMessageCountMinxin, FormattedUpdateDateMixin,
     search_fields = ['user__username']
     autocomplete_fields = ['product']
     related_field = 'session_id'
-    readonly_fields = ['host', 'user', 'product', 'summary']
+    readonly_fields = ['host', 'user', 'product']
 
     ordering = ['-updated_at']
 

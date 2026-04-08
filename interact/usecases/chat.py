@@ -6,7 +6,6 @@ from ai.services.get_modelprovider import get_chat_model_provider
 from ai.services.get_aimodel import resolve_model
 from ai.contracts import CHAT
 from interact.models import ChatMessage
-from interact.tasks import summarize_session_task
 from interact.utils.recorder import record_usage
 from interact.utils.credits import require_credits
 from interact.utils.timezone import local_time_for_user
@@ -40,15 +39,23 @@ def get_assistant_message(*, session, user_msg: ChatMessage):
         product=session.product
     ))
 
-    # Conversation summary
-    if session.summary:
+    # Conversation summary (new SessionSummary)
+    summary = getattr(session, "sessionsummary", None)
+
+    if summary and summary.content:
         messages.append({
             "role": "system",
-            "content": f"Conversation summary:\n\n {session.summary}"
+            "content": f"Conversation Summary:\n{summary.content}"
+        })
+
+    if summary and summary.topics:
+        topics_str = ", ".join(summary.topics)
+        messages.append({
+            "role": "system",
+            "content": f"Conversation Topics:\n{topics_str}"
         })
 
     # Current time system prompt
-
     dt = timezone.now()  # UTC
     user_profile = session.user.user_profile  # user_profile
     local_dt = local_time_for_user(dt=dt, user=user_profile)
@@ -68,9 +75,9 @@ def get_assistant_message(*, session, user_msg: ChatMessage):
 
     messages.extend(raw_messages)
 
-    # ########## PROMPTS DEBUG ##########
+    print("########## PROMPTS DEBUG ##########")
     print(messages)
-    # ########## END OF PROMPTS DEBUG ##########
+    print("########## END OF PROMPTS DEBUG ##########")
 
     # 4)Call LLM
     model = resolve_model(profile=session.host.host_profile, usecase=CHAT)
@@ -114,8 +121,5 @@ def get_assistant_message(*, session, user_msg: ChatMessage):
     if usage.get('output_tokens'):
         record_usage(message=assistant_msg, model=model_output,
                      units=usage.get('output_tokens'))
-
-    # 7)async summarization
-    summarize_session_task.delay(session.id)
 
     return assistant_msg

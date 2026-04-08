@@ -191,11 +191,6 @@ class ChatSession(AbstractCommon):
     product_key = models.IntegerField(editable=False)
     visible = models.BooleanField(default=True)
 
-    summary = models.TextField(blank=True)
-    # marks the last message already summarized
-    summary_upto_message = models.ForeignKey('ChatMessage', null=True, blank=True,
-                                             on_delete=models.SET_NULL, related_name='chat_sessions')
-
     latest_chat = models.TextField(max_length=255, blank=True)
 
     cost = models.DecimalField(max_digits=12, decimal_places=6, default=0,

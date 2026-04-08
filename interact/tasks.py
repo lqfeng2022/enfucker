@@ -1,6 +1,5 @@
 # interact/tasks.py
 from celery import shared_task
-from interact.usecases.summary import maybe_summarize_session
 from interact.usecases.event_summary import session_event_summary
 from interact.usecases.session_summary import session_summary
 from interact.services.session_filters import get_sessions_for_event_summary
@@ -8,17 +7,6 @@ from interact.models import ChatSession
 import logging
 
 logger = logging.getLogger(__name__)
-
-
-@shared_task(
-    bind=True,
-    autoretry_for=(Exception,),
-    retry_backoff=10,
-    retry_kwargs={'max_retries': 3}
-)
-def summarize_session_task(self, session_id):
-    session = ChatSession.objects.get(id=session_id)
-    maybe_summarize_session(session=session)
 
 
 @shared_task(
