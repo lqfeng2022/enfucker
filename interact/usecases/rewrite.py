@@ -2,7 +2,7 @@
 from ai.engines.llm_chat import deepseek_engine
 from ai.services.get_modelprovider import get_summary_model
 from ai.services.get_aimodel import resolve_model
-from ai.prompts.rewrite import get_user_rewrite_prompt
+from ai.prompts.rewrite import get_rewrite_prompt
 from ai.contracts import SUMMARY
 from interact.utils.recorder import record_usage
 from interact.models import MessageRewrite, ChatMessage
@@ -19,17 +19,19 @@ def session_message_rewrite(*, message: ChatMessage):
         logger.info("No messages for session event summary")
         return
 
-    # Use the session.language (denormalized, fast!)
+    # Use the prompt code from message and message.session
+    role_code = getattr(message, "role", "user")
     language_code = getattr(message.session, "language", "en")
+    code = f"{role_code}-{language_code}"
 
     print("########## DEBUG CODE ##########")
-    print(language_code)
-    print(get_user_rewrite_prompt(language_code))
+    print(code)
+    print(get_rewrite_prompt(code))
     print("########## DEBUG CODE ##########")
 
     # build prompts (system + messages)
     messages_payload = [
-        {"role": "system", "content": get_user_rewrite_prompt(language_code)},
+        {"role": "system", "content": get_rewrite_prompt(code)},
         {"role": "user", "content": message.content}
     ]
 

@@ -1,2 +1,2 @@
-SUMMARY_WINDOW = 20  # summary every 30 messages
-CHAT_CONTEXT_LIMIT = 20  # leave recent 30 messages to agent
+SUMMARY_WINDOW = 20  # summary every 20 messages
+CHAT_CONTEXT_LIMIT = 21  # leave recent 20 + 1 messages to agent
