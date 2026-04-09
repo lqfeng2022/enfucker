@@ -28,10 +28,11 @@ def get_chat_context(*, session):
     start_utc = start_of_day.astimezone(pytz.UTC)
 
     # --- Step 2: Get today's messages ---
-    today_qs = queryset.filter(created_at__gte=start_utc). \
+    today_qs = queryset.select_related('learning').filter(created_at__gte=start_utc). \
         order_by("created_at")
     today_messages = list(
-        today_qs.values("role", "content", "created_at", "type")
+        today_qs.values("role", "content", "created_at",
+                        "type", "learning__content")
     )
 
     # --- Step 3: If today messages < limit → backfill ---
@@ -39,9 +40,10 @@ def get_chat_context(*, session):
         remaining = CHAT_CONTEXT_LIMIT - len(today_messages)
 
         previous_qs = (
-            queryset.filter(created_at__lt=start_utc)
+            queryset.select_related('learning').filter(
+                created_at__lt=start_utc)
             .order_by("-created_at")
-            .values("role", "content", "created_at", "type")[:remaining]
+            .values("role", "content", "created_at", "type", "learning__content")[:remaining]
         )
 
         previous_messages = list(previous_qs)[::-1]  # oldest → newest
@@ -55,10 +57,15 @@ def get_chat_context(*, session):
 
     for m in raw_messages:
         local_dt = local_time_for_user(dt=m["created_at"], user=user_profile)
+        content = (m["content"] or "").strip()
+        learning_content = (m.get("learning__content") or "").strip()
+
+        if m["role"] == "assistant" and learning_content:
+            content = learning_content
 
         formatted_messages.append({
             "role": m["role"],
-            "content": (m["content"] or "").strip(),
+            "content": content,
             "type": TYPE_LABELS.get(m["type"], m["type"]),
             "created_at": local_dt.strftime('%Y-%m-%d %H:%M')
         })
