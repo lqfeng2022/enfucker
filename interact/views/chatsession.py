@@ -143,11 +143,11 @@ class ChatMessageViewSet(ListModelMixin, CreateModelMixin, RetrieveModelMixin,
         """Rewrite the selected user message."""
         message = self.get_object()
 
-        if message.role != ChatMessage.USER:
-            return Response(
-                {"detail": "Only user messages can be rewritten."},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+        # if message.role != ChatMessage.USER:
+        #     return Response(
+        #         {"detail": "Only user messages can be rewritten."},
+        #         status=status.HTTP_400_BAD_REQUEST
+        #     )
 
         # call rewrite only on POST
         session_message_rewrite(message=message)
