@@ -323,12 +323,12 @@ class ModelUsage(models.Model):
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT,
                              related_name='usage_costs', editable=False)
-    message = models.ForeignKey(ChatMessage, null=True, blank=True, on_delete=models.CASCADE,
+    message = models.ForeignKey(ChatMessage, null=True, blank=True, on_delete=models.SET_NULL,
                                 related_name='usage_costs', editable=False)
-    session = models.ForeignKey(ChatSession, null=True, blank=True, on_delete=models.PROTECT,
+    session = models.ForeignKey(ChatSession, null=True, blank=True, on_delete=models.SET_NULL,
                                 related_name='usage_costs', editable=False)
 
-    call_session = models.ForeignKey(CallSession, null=True, blank=True,  on_delete=models.PROTECT,
+    call_session = models.ForeignKey(CallSession, null=True, blank=True,  on_delete=models.SET_NULL,
                                      related_name='usage_costs', editable=False)
 
     chat_model = models.ForeignKey(settings.AI_MODELPROVIDER_MODEL, on_delete=models.CASCADE,
