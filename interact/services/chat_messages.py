@@ -60,7 +60,7 @@ def get_chat_context(*, session):
         content = (m["content"] or "").strip()
         learning_content = (m.get("learning__content") or "").strip()
 
-        if m["role"] == "assistant" and learning_content:
+        if learning_content:
             content = learning_content
 
         formatted_messages.append({
