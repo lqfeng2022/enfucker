@@ -205,18 +205,18 @@ LOGGING = {
     },
     'loggers': {
         # Silence noisy infra
-        'celery': {'level': 'WARNING'},
+        'celery': {'level': 'INFO'},
         'kombu': {'level': 'WARNING'},
         'amqp': {'level': 'WARNING'},
-        'redis': {'level': 'WARNING'},
+        'redis': {'level': 'INFO'},
         'urllib3': {'level': 'WARNING'},
         'requests': {'level': 'WARNING'},
         # DB spam control
         'django.db.backends': {'level': 'ERROR'},
         # Your app stays at INFO
+        'enfucker': {'level': 'INFO'},
         'interact': {'level': 'INFO'},
         'ai': {'level': 'INFO'},
-        'enfucker': {'level': 'INFO'},
     },
 }
 
@@ -240,7 +240,7 @@ USE_TZ = True
 CELERY_BEAT_SCHEDULE = {
     "daily-session-event-summary": {
         "task": "interact.tasks.summarize_session_events_task",
-        "schedule": crontab(hour=0, minute=0),  # midnight
+        "schedule": crontab(hour=15, minute=0),  # midnight
     },
 }
 
@@ -257,6 +257,7 @@ CACHES = {
 }
 
 
+# Templates
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',

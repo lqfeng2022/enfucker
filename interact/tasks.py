@@ -9,54 +9,35 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-# Main daily task
-@shared_task(
-    bind=True,
-    autoretry_for=(Exception,),
-    retry_backoff=10,
-    retry_kwargs={'max_retries': 3}
-)
-def summarize_session_events_task(self):
-    """
-    Run daily: generate events for ALL active sessions
-    """
-    # print("🔥 CELERY BEAT TEST TRIGGERED")
+# Daily task with celery beat
+@shared_task()
+def summarize_session_events_task():
     session_ids = get_sessions_for_event_summary()
 
     for session_id in session_ids:
         # After events are generated, update session summary
         chain(
             session_event_summary_task.s(session_id),
-            update_session_summary_task.s(session_id)
+            update_session_summary_task.si(session_id)
         ).apply_async()
 
 
 # Per-session event generation
-@shared_task(
-    bind=True,
-    autoretry_for=(Exception,),
-    retry_backoff=10,
-    retry_kwargs={'max_retries': 3}
-)
+@shared_task()
 def session_event_summary_task(session_id):
-    """
-    Wrapper Celery task for a single session
-    """
-    session = ChatSession.objects.get(id=session_id)
-    session_event_summary(session=session)
+    try:
+        session = ChatSession.objects.get(id=session_id)
+        session_event_summary(session=session)
+    except ChatSession.DoesNotExist:
+        logger.warning(f"Session {session_id} not found")
+    except Exception:
+        logger.exception(f"Failed event summary for session {session_id}")
+        raise  # let Celery retry if needed
 
 
-# Update session summary task
-@shared_task(
-    bind=True,
-    autoretry_for=(Exception,),
-    retry_backoff=10,
-    retry_kwargs={'max_retries': 3}
-)
-def update_session_summary_task(self, session_id):
-    """
-    Generate or update a session-wide summary for a single session.
-    """
+# Update(generate) session summary task
+@shared_task()
+def update_session_summary_task(session_id):
     try:
         session = ChatSession.objects.get(id=session_id)
     except ChatSession.DoesNotExist:
@@ -65,9 +46,7 @@ def update_session_summary_task(self, session_id):
 
     summary = session_summary(session=session)
     if summary:
-        logger.info(f"Session summary updated for session {session_id}")
-    else:
-        logger.warning(f"Session summary failed for session {session_id}")
+        logger.info(f"Updated session {session_id}")
 
 
 # NOTE:
@@ -80,4 +59,5 @@ def update_session_summary_task(self, session_id):
 # 2. chain() - DEPENDENT WORKFLOW
 # chain() make sure the executing order
 # .s() creates a signature — lightweight object for chaining tasks.
+# .si() prevents Celery from injecting the previous task result
 # apply_async() schedules the chain on the broker immediately.
