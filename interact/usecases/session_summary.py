@@ -18,64 +18,55 @@ def session_summary(*, session: ChatSession):
     Follows the same style as session_message_rewrite: debug prints, model resolve, token usage.
     """
 
-    # --- Step 1: Collect all events for the session ---
-    events = list(session.events.order_by(
-        "created_at").values("title", "content", "topics"))
+    # Collect all events for the session ---
+    events = list(
+        session.events
+        .order_by("created_at")
+        .values("title", "content", "topics")
+    )
     if not events:
-        logger.info("No session events to summarize",
-                    extra={"session_id": session.id})
+        logger.info("No session events to summarize")
         return None
 
-    # --- Step 2: Build LLM messages ---
+    # Build LLM messages ---
     system_prompt = get_summary_prompt()
-    print("########## DEBUG SUMMARY PROMPT ##########")
-    print(system_prompt)
-    print("########## DEBUG SUMMARY PROMPT ##########")
-
     messages_payload = [
         {"role": "system", "content": system_prompt},
         {"role": "user", "content": json.dumps(events)}
     ]
 
-    # --- Step 3: Resolve model and call LLM ---
+    # Resolve model and call LLM ---
     model = resolve_model(profile=session.host.host_profile, usecase=SUMMARY)
     input_cache, input_model, output_model = get_summary_model(model=model)
 
     result = deepseek_engine(messages_payload, model=output_model.model.name)
     if not result.get("success", False):
-        logger.error("Session summary generation failed",
-                     extra={"session_id": session.id})
+        logger.error("Session summary generation failed")
         return None
 
     content = result.get("content", "").strip()
-    print("########## DEBUG AI RESPONSE ##########")
-    print(content)
-    print("########## DEBUG AI RESPONSE ##########")
-
     if not content:
-        logger.warning("Empty AI response for session summary",
-                       extra={"session_id": session.id})
+        logger.warning("Empty AI response for session summary")
         return None
 
-    # --- Step 4: Parse JSON output ---
+    # Parse JSON output ---
     summary_data = _extract_json(content)
     if isinstance(summary_data, dict):
         content = summary_data.get("content", "")
         topics = summary_data.get("topics", [])
     else:
-        logger.warning("Invalid JSON output from AI",
-                       extra={"session_id": session.id})
+        logger.warning("Invalid JSON output from AI")
         content = ""
         topics = []
 
-    # --- Step 5: Save/update SessionSummary ---
+    # Save/update SessionSummary ---
     with transaction.atomic():
         summary, _ = SessionSummary.objects.update_or_create(
             session=session,
             defaults={"content": content, "topics": topics},
         )
 
-    # --- Step 6: Record token usage ---
+    # Record token usage ---
     usage = result.get("usage", {}) or {}
     if usage.get("input_cached_tokens"):
         record_usage(session=session, model=input_cache,

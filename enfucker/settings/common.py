@@ -240,7 +240,7 @@ USE_TZ = True
 CELERY_BEAT_SCHEDULE = {
     "daily-session-event-summary": {
         "task": "interact.tasks.summarize_session_events_task",
-        "schedule": crontab(hour=15, minute=0),  # midnight
+        "schedule": crontab(hour=0, minute=0),  # midnight
     },
 }
 
