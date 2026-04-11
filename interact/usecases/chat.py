@@ -11,6 +11,7 @@ from interact.utils.credits import require_credits
 from interact.utils.timezone import local_time_for_user
 from interact.services.chat_prompts import build_system_prompts
 from interact.services.chat_messages import get_chat_context
+from interact.tasks import session_current_summary_task
 import logging
 
 logger = logging.getLogger(__name__)
@@ -121,5 +122,7 @@ def get_assistant_message(*, session, user_msg: ChatMessage):
     if usage.get('output_tokens'):
         record_usage(message=assistant_msg, model=model_output,
                      units=usage.get('output_tokens'))
+
+    session_current_summary_task.delay(session.id)
 
     return assistant_msg

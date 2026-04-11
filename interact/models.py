@@ -418,6 +418,8 @@ class SessionSummary(AbstractCommon):
     content = models.TextField()  # core summary content
     topics = models.JSONField(default=list, blank=True)
 
+    current = models.TextField(blank=True)  # temporary current memory
+
     def __str__(self):
         return f"SessionSummary - {self.session_id}"
 

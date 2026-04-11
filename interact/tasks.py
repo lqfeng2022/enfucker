@@ -2,6 +2,7 @@
 from celery import shared_task, chain
 from interact.usecases.event_summary import session_event_summary
 from interact.usecases.session_summary import session_summary
+from interact.usecases.current_summary import session_current_summary
 from interact.services.session_filters import get_sessions_for_event_summary
 from interact.models import ChatSession
 import logging
@@ -47,6 +48,17 @@ def update_session_summary_task(session_id):
     summary = session_summary(session=session)
     if summary:
         logger.info(f"Updated session {session_id}")
+
+
+@shared_task(
+    bind=True,
+    autoretry_for=(Exception,),
+    retry_backoff=10,
+    retry_kwargs={'max_retries': 3}
+)
+def session_current_summary_task(self, session_id):
+    session = ChatSession.objects.get(id=session_id)
+    session_current_summary(session=session)
 
 
 # NOTE:

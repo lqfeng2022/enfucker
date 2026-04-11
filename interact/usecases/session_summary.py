@@ -63,7 +63,11 @@ def session_summary(*, session: ChatSession):
     with transaction.atomic():
         summary, _ = SessionSummary.objects.update_or_create(
             session=session,
-            defaults={"content": content, "topics": topics},
+            defaults={
+                "content": content,
+                "topics": topics,
+                "current": ""  # reset working memory at midnight
+            },
         )
 
     # Record token usage ---
