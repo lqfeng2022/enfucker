@@ -17,112 +17,175 @@ import logging
 logger = logging.getLogger(__name__)
 
 
+# # Public API
 @require_credits(min_credits=10)
 def get_assistant_message(*, session, user_msg: ChatMessage):
-    # 1)ASSERT USER role
-    assert user_msg.role == ChatMessage.USER
+    # validation
+    _validate_user_message(user_msg)
 
-    # 2)Validate user content (FINAL GATE)
-    user_text = (user_msg.content or '').strip()
-    if not user_text:
+    # prompt building
+    messages = _build_messages(session, user_msg)
+
+    print("########## PROMPTS DEBUG ##########")
+    print(messages)
+    print("########## PROMPTS DEBUG ##########")
+
+    # LLM call
+    result = _call_llm(session, messages)
+    if not result:
+        raise RuntimeError("LLM failed")
+
+    # formatting
+    content = _normalize_content(result)
+
+    # persistence
+    assistant_msg = _save_message(session, user_msg, content)
+
+    # billing
+    _record_usage(user_msg, assistant_msg, result)
+
+    # async trigger
+    _trigger_async_tasks(session)
+
+    return assistant_msg
+
+
+# validation
+def _validate_user_message(message):
+    assert message.role == ChatMessage.USER
+
+    content = (message.content or "").strip()
+    if not content:
         logger.warning(
-            'Skipping LLM call due to empty user content',
-            extra={'session_id': session.id, 'message_id': user_msg.id, }
+            "Empty user message",
+            extra={"message_id": message.id}
         )
-        return None
+        raise ValueError("Empty user message")
 
-    # 3)ADD system/chat prompts + latest 30 messages
+
+# prompt building
+def _build_messages(session, user_msg):
     messages = []
 
-    # Existing system prompts (host, product)
+    # system prompts
     messages.extend(build_system_prompts(
         host_profile=session.host.host_profile,
         product=session.product
     ))
 
-    # Conversation summary (new SessionSummary)
+    # summary prompts
+    messages.extend(_build_summary_prompts(session))
+    # time prompt
+    messages.append(_build_time_prompt(session))
+    # chat history
+    messages.extend(get_chat_context(session=session))
+
+    return messages
+
+
+def _build_summary_prompts(session):
     summary = getattr(session, "sessionsummary", None)
+    if not summary:
+        return []
 
-    if summary and summary.content:
-        messages.append({
-            "role": "system",
-            "content": f"Conversation Summary:\n{summary.content}"
-        })
+    memory = []
 
-    if summary and summary.topics:
-        topics_str = ", ".join(summary.topics)
-        messages.append({
-            "role": "system",
-            "content": f"Conversation Topics:\n{topics_str}"
-        })
+    if summary.content:
+        memory.append(f"SUMMARY:\n{summary.content}")
 
-    # Current time system prompt
-    dt = timezone.now()  # UTC
-    user_profile = session.user.user_profile  # user_profile
+    if summary.topics:
+        memory.append(f"TOPICS:\n{', '.join(summary.topics)}")
+
+    if summary.current:
+        memory.append(f"WORKING MEMORY:\n{summary.current}")
+
+    if not memory:
+        return []
+
+    return [{
+        "role": "system",
+        "content": "CONVERSATION MEMORY:\n\n" + "\n\n".join(memory)
+    }]
+
+
+def _build_time_prompt(session):
+    dt = timezone.now()
+    user_profile = session.user.user_profile
     local_dt = local_time_for_user(dt=dt, user=user_profile)
 
-    messages.append({
+    return {
         "role": "system",
         "content": (
-            f"Current time: {local_dt.strftime("%Y-%m-%d %H:%M")}\n"
+            f"Current time: {local_dt.strftime('%Y-%m-%d %H:%M')}\n"
             "Each message has a timestamp and type (text, voice, call). "
-            "Use this information to understand timing and communication context naturally, "
-            "but do not include the timestamps in your responses unless explicitly asked."
+            "Use this information naturally, but do not include timestamps unless asked."
         )
-    })
+    }
 
-    # Latest chat messages
-    raw_messages = get_chat_context(session=session)
 
-    messages.extend(raw_messages)
-
-    print("########## PROMPTS DEBUG ##########")
-    print(messages)
-    print("########## END OF PROMPTS DEBUG ##########")
-
-    # 4)Call LLM
-    model = resolve_model(profile=session.host.host_profile, usecase=CHAT)
-    model_input, model_output = get_chat_model_provider(model=model)
-
-    response = qwenplus_engine(messages, model=model_output.model.name)
-
-    # ensure all callers receive formatted text regardless of engine output
-    if response.get('content'):
-        response['content'] = format_text(response['content'])
-
-    if not response.get('success'):
-        logger.error('LLM failure', extra={
-            'session_id': session.id,
-            'model': model_output.model.name,
-            'error': response.get('error'),
-        })
-        # Prevent KeyError when response has no 'content' (failure case)
-        raise RuntimeError(response.get('error') or 'LLM failure')
-
-    # 5)Persist assistant message
-    assistant_msg = ChatMessage.objects.create(
-        session=session,
-        call_session=user_msg.call_session,  # 🔥 MUST be here
-        role=ChatMessage.ASSISTANT,
-        content=response['content'],
-        is_voice=False,  # TTS handled separately
+# LLM call
+def _call_llm(session, messages):
+    model = resolve_model(
+        profile=session.host.host_profile,
+        usecase=CHAT
     )
 
-    # 6)Record usage
-    usage = response.get('usage', {}) or {}
+    model_input, model_output = get_chat_model_provider(model=model)
 
-    # if usage.get('input_cached_tokens'):
-    #     record_usage(message=user_msg, model=model_input_cache,
-    #                  units=usage.get('input_cached_tokens'))
+    result = qwenplus_engine(messages, model=model_output.model.name)
 
-    if usage.get('input_tokens'):
-        record_usage(message=user_msg, model=model_input,
-                     units=usage.get('input_tokens'))
+    if not result.get("success"):
+        logger.error(
+            "LLM failure",
+            extra={
+                "session_id": session.id,
+                "model": model_output.model.name,
+                "error": result.get("error"),
+            }
+        )
+        return None
 
-    if usage.get('output_tokens'):
-        record_usage(message=assistant_msg, model=model_output,
-                     units=usage.get('output_tokens'))
+    result["_models"] = (model_input, model_output)
+    return result
 
+
+# formatting
+def _normalize_content(result):
+    content = result.get("content") or ""
+    return format_text(content)
+
+
+# persistence
+def _save_message(session, user_msg, content):
+    return ChatMessage.objects.create(
+        session=session,
+        call_session=user_msg.call_session,
+        role=ChatMessage.ASSISTANT,
+        content=content,
+        is_voice=False,
+    )
+
+
+# billing
+def _record_usage(user_msg, assistant_msg, result):
+    usage = result.get("usage") or {}
+    model_input, model_output = result.get("_models")
+
+    usage_map = [
+        ("input_tokens", model_input, user_msg),
+        ("output_tokens", model_output, assistant_msg),
+    ]
+
+    for key, model, owner in usage_map:
+        tokens = usage.get(key)
+        if tokens:
+            record_usage(
+                message=owner,
+                model=model,
+                units=tokens,
+            )
+
+
+# async trigger
+def _trigger_async_tasks(session):
     session_current_summary_task.delay(session.id)
-
-    return assistant_msg

@@ -13,6 +13,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 
+# Public API
 def session_event_summary(*, session, max_events_per_day=5, time_gap_minutes=30):
     """
     Summarize session messages into daily events using time-based chunking.
@@ -25,231 +26,171 @@ def session_event_summary(*, session, max_events_per_day=5, time_gap_minutes=30)
         time_gap_minutes: Minutes between messages to split chunks
     """
     # Get all event_id_isnull messages
-    queryset = (
+    messages = _get_messages(session)
+    if not messages:
+        return
+
+    # Plit messages into chunks every 30 minutes
+    chunks = _build_chunks(messages, time_gap_minutes, max_events_per_day)
+    if not chunks:
+        return
+
+    # Call LLM for each chunk and create SessionEvent
+    for chunk in chunks:
+        result = _process_chunk(session, chunk)
+        if not result:
+            continue
+
+        parsed = _parse_result(result)
+        if not parsed:
+            continue
+
+        _save_event(session, chunk, parsed)
+        _record_usage(session, result)
+
+
+# Data fetching
+def _get_messages(session):
+    messages = list(
         session.messages
         .filter(event_id__isnull=True)
         .only("id", "role", "content", "created_at")
         .order_by("created_at")
     )
 
-    messages = list(queryset)
     if not messages:
-        logger.info("No messages for session event summary",
-                    extra={"session_id": session.id})
-        return
+        logger.info(
+            "No messages for session event summary",
+            extra={"session_id": session.id}
+        )
+        return []
 
-    # Plit messages into chunks every 30 minutes
-    chunks = _get_chunks(messages=messages, time_gap_minutes=time_gap_minutes)
+    return [m for m in messages if (m.content or "").strip()]
 
-    # Limit number of events per day
+
+# Chunk pipeline
+def _build_chunks(messages, time_gap_minutes, max_events):
+    chunks = _split_by_time(messages, time_gap_minutes)
+
     chunk_meta = [
         {
             "messages": chunk,
             "start": chunk[0].created_at,
             "end": chunk[-1].created_at,
-        } for chunk in chunks
+        }
+        for chunk in chunks
     ]
 
-    chunks = _merge_chunks_smart_content(chunk_meta, max_events_per_day)
-    chunks = [c["messages"] for c in chunks]
-
-    # Call LLM for each chunk and create SessionEvent
-    for chunk in chunks:
-        chunk_text = "\n".join(
-            f"[{m.role.upper()}]\n{m.content.strip()}" for m in chunk
-        )
-
-        # build prompts (system + messages)
-        messages_payload = [
-            {"role": "system", "content": get_event_summary_prompt()},
-            {"role": "user", "content": chunk_text}
-        ]
-
-        # Call LLM for updated summary
-        model = resolve_model(
-            profile=session.host.host_profile,
-            usecase=SUMMARY
-        )
-        input_cache, input, output = get_summary_model(model=model)
-
-        result = deepseek_engine(messages_payload, model=output.model.name)
-        if not result.get('success', False):
-            logger.error('Session summary failed',
-                         extra={'session_id': session.id})
-            continue
-
-        # Extract json data then store in DB
-        content = result.get('content') or ''
-        if not content.strip():
-            logger.warning("Empty LLM response", extra={
-                           "session_id": session.id})
-            continue
-
-        _parse_and_create_session_events(session=session, content=content,
-                                         chunk_messages=chunk)
-
-        # Record token usage
-        usage = result.get('usage', {}) or {}
-        if usage.get('input_cached_tokens'):
-            record_usage(session=session, model=input_cache,
-                         units=usage.get('input_cached_tokens'))
-        if usage.get('input_tokens'):
-            record_usage(session=session, model=input,
-                         units=usage['input_tokens'])
-        if usage.get('output_tokens'):
-            record_usage(session=session, model=output,
-                         units=usage['output_tokens'])
+    merged = _merge_chunks(chunk_meta, max_events)
+    return [c["messages"] for c in merged]
 
 
-def _get_chunks(*, messages, time_gap_minutes=30):
+# Time split
+def _split_by_time(messages, gap_minutes):
     chunks = []
-    current_chunk = []
+    current = []
     last_time = None
 
     for m in messages:
-        if not m.content.strip():
-            continue
+        if last_time:
+            gap = (m.created_at - last_time).total_seconds()
+            if gap > gap_minutes * 60:
+                if current:
+                    chunks.append(current)
+                current = []
 
-        if last_time is not None:
-            chunk_gap = (m.created_at - last_time).total_seconds()
-            if last_time and chunk_gap > time_gap_minutes * 60:
-                if current_chunk:
-                    chunks.append(current_chunk)
-                current_chunk = []
-
-        current_chunk.append(m)
+        current.append(m)
         last_time = m.created_at
 
-    if current_chunk:
-        chunks.append(current_chunk)
+    if current:
+        chunks.append(current)
 
     return chunks
 
 
-def _merge_chunks_smart_content(chunks, max_events, max_message_content=1000):
+# Smart merge
+def _merge_chunks(chunks, max_events, max_content=1000):
     """
     Content-driven smart merge/split:
-    1. Merge small chunks based on nearest neighbor
-    2. Ensure total chunks <= max_events
+    - Merge small chunks based on nearest neighbor
+    - Ensure total chunks <= max_events
     """
-    def chunk_content_size(chunk):
-        # Only count user messages
-        return sum(len(m.content or '') for m in chunk["messages"] if m.role == "user")
+    def size(c):
+        return sum(len(m.content or "") for m in c["messages"] if m.role == "user")
 
-    # Merge small chunks by nearest neighbor
+    # merge small chunks
     i = 0
     while i < len(chunks):
-        size_i = chunk_content_size(chunks[i])
+        if size(chunks[i]) < max_content:
+            left = size(chunks[i - 1]) if i > 0 else float("inf")
+            right = size(chunks[i + 1]) if i < len(chunks) - \
+                1 else float("inf")
 
-        if size_i < max_message_content:
-            # determine which neighbor to merge with
-            merge_with_left = False
-            merge_with_right = False
-
-            if i > 0:
-                merge_with_left = True
-                left_size = chunk_content_size(chunks[i - 1])
-            else:
-                left_size = float('inf')
-
-            if i < len(chunks) - 1:
-                merge_with_right = True
-                right_size = chunk_content_size(chunks[i + 1])
-            else:
-                right_size = float('inf')
-
-            # pick neighbor with smaller size to balance chunks
-            if left_size <= right_size and merge_with_left:
-                # merge with left
-                chunks[i - 1]["messages"].extend(chunks[i]["messages"])
+            if i > 0 and left <= right:
+                chunks[i - 1]["messages"] += chunks[i]["messages"]
                 chunks[i - 1]["end"] = chunks[i]["end"]
-
                 del chunks[i]
-                i -= 1  # stay on merged chunk
-            elif merge_with_right:
-                # merge with right
-                chunks[i]["messages"].extend(chunks[i + 1]["messages"])
+                i -= 1
+            elif i < len(chunks) - 1:
+                chunks[i]["messages"] += chunks[i + 1]["messages"]
                 chunks[i]["end"] = chunks[i + 1]["end"]
-
                 del chunks[i + 1]
-                # stay at current i to check further merges
             else:
-                # no neighbor to merge, move forward
                 i += 1
         else:
             i += 1
 
-    # Ensure max_events
+    # enforce max_events
     while len(chunks) > max_events:
-        # merge the smallest chunk with neighbor
-        sizes = [chunk_content_size(c) for c in chunks]
-        smallest_idx = sizes.index(min(sizes))
+        sizes = [size(c) for c in chunks]
+        idx = sizes.index(min(sizes))
+        merge_idx = 0 if idx == 0 else idx - 1
 
-        merge_idx = 0 if smallest_idx == 0 else smallest_idx - 1
-
-        chunks[merge_idx]["messages"].extend(chunks[merge_idx + 1]["messages"])
+        chunks[merge_idx]["messages"] += chunks[merge_idx + 1]["messages"]
         chunks[merge_idx]["end"] = chunks[merge_idx + 1]["end"]
-
         del chunks[merge_idx + 1]
 
     return chunks
 
 
-def _parse_and_create_session_events(*, session, content: str, chunk_messages: list):
-    """
-    Parse LLM JSON result and store SessionEvent objects.
-    Also assign the chunk messages to the created event.
-    """
-    events_data = _extract_json(content)
-    if not isinstance(events_data, list) or not events_data:
-        logger.warning("Invalid events format",
-                       extra={"session_id": session.id})
-        return
+# Process one chunk
+def _process_chunk(session, chunk):
+    messages = _build_llm_messages(chunk)
+    return _call_llm(session, messages)
 
-    # If any message already has an event, update that existing event
-    existing_event_ids = {m.event_id for m in chunk_messages if m.event_id}
 
-    existing_event = None
-    if existing_event_ids:
-        existing_event = (
-            ChatMessage.objects
-            .filter(event_id__in=existing_event_ids)
-            .values_list('event_id', flat=True)
-            .first()
-        )
-        if existing_event:
-            existing_event = SessionEvent.objects.get(id=existing_event)
-
-    # Use the first valid event payload only; each chunk should map to one event.
-    event_payload = None
-    for e in events_data:
-        if e.get('content'):
-            event_payload = e
-            break
-
-    if not event_payload:
-        return
-
-    if existing_event:
-        existing_event.title = (event_payload.get('title') or '')[:255]
-        existing_event.content = (event_payload.get('content') or '')
-        existing_event.topics = _ensure_list(event_payload.get('topics'))
-        existing_event.save(
-            update_fields=['title', 'content', 'topics', 'updated_at']
-        )
-        ChatMessage.objects.filter(id__in=[m.id for m in chunk_messages]). \
-            update(event=existing_event)
-        return
-
-    event = SessionEvent(
-        session=session,
-        title=(event_payload.get('title') or '')[:255],
-        content=(event_payload.get('content') or ''),
-        topics=_ensure_list(event_payload.get('topics')),
+def _build_llm_messages(chunk):
+    text = "\n".join(
+        f"[{m.role.upper()}]\n{(m.content or '').strip()}"
+        for m in chunk
     )
-    event.save()
-    ChatMessage.objects.filter(id__in=[m.id for m in chunk_messages]). \
-        update(event=event)
+
+    return [
+        {"role": "system", "content": get_event_summary_prompt()},
+        {"role": "user", "content": text},
+    ]
+
+
+# Call LLM
+def _call_llm(session, messages):
+    model = resolve_model(
+        profile=session.host.host_profile,
+        usecase=SUMMARY
+    )
+
+    input_cache, input_model, output_model = get_summary_model(model=model)
+
+    result = deepseek_engine(messages, model=output_model.model.name)
+
+    if not result.get("success"):
+        logger.error(
+            "Event summary failed",
+            extra={"session_id": session.id}
+        )
+        return None
+
+    result["_models"] = (input_cache, input_model, output_model)
+    return result
 
 
 def _extract_json(content: str):
@@ -264,6 +205,90 @@ def _extract_json(content: str):
             except Exception:
                 return []
     return []
+
+
+# Parse result
+def _parse_result(result):
+    content = (result.get("content") or "").strip()
+    if not content:
+        return None
+
+    data = _extract_json(content)
+
+    if not isinstance(data, list) or not data:
+        return None
+
+    # only take first valid event
+    for e in data:
+        if e.get("content"):
+            return {
+                "title": (e.get("title") or "")[:255],
+                "content": e.get("content") or "",
+                "topics": _ensure_list(e.get("topics")),
+            }
+
+    return None
+
+
+# Save/Update event
+def _save_event(session, chunk, parsed):
+    message_ids = [m.id for m in chunk]
+
+    existing_event = _find_existing_event(chunk)
+
+    if existing_event:
+        existing_event.title = parsed["title"]
+        existing_event.content = parsed["content"]
+        existing_event.topics = parsed["topics"]
+        existing_event.save(
+            update_fields=["title", "content", "topics", "updated_at"])
+
+        ChatMessage.objects.filter(
+            id__in=message_ids).update(event=existing_event)
+        return
+
+    event = SessionEvent.objects.create(
+        session=session,
+        title=parsed["title"],
+        content=parsed["content"],
+        topics=parsed["topics"],
+    )
+
+    ChatMessage.objects.filter(id__in=message_ids).update(event=event)
+
+
+# Find existing event
+def _find_existing_event(chunk):
+    event_ids = {m.event_id for m in chunk if m.event_id}
+    if not event_ids:
+        return None
+
+    return (
+        SessionEvent.objects
+        .filter(id__in=event_ids)
+        .first()
+    )
+
+
+# Usage tracking
+def _record_usage(session, result):
+    usage = result.get("usage") or {}
+    model_input_cache, model_input, model_output = result.get("_models")
+
+    usage_map = [
+        ("input_cached_tokens", model_input_cache),
+        ("input_tokens", model_input),
+        ("output_tokens", model_output),
+    ]
+
+    for key, model in usage_map:
+        tokens = usage.get(key)
+        if tokens:
+            record_usage(
+                session=session,
+                model=model,
+                units=tokens,
+            )
 
 
 def _ensure_list(val):

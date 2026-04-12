@@ -20,15 +20,8 @@ def session_current_summary(*, session):
     if len(unsummarized) <= SUMMARY_WINDOW:
         return
 
-    # summarize ONLY a moving slice behind the live window
-    RECENT_WINDOW = SUMMARY_WINDOW
-    OVERLAP_WINDOW = SUMMARY_WINDOW * 2
-
-    if len(unsummarized) <= RECENT_WINDOW:
-        return
-
     # get target messages then put them in a list container
-    to_summarize = unsummarized[-OVERLAP_WINDOW:-RECENT_WINDOW]
+    to_summarize = unsummarized[:-SUMMARY_WINDOW]
     lines = _build_lines(to_summarize)
 
     if not lines:
@@ -128,17 +121,20 @@ def _save_summary(session, result):
 
 
 def _record_usage(session, result):
-    usage = result.get("usage", {}) or {}
+    usage = result.get("usage") or {}
     model_input_cache, model_input, model_output = result.get("_models")
 
-    if usage.get("input_cached_tokens"):
-        record_usage(session=session, model=model_input_cache,
-                     units=usage["input_cached_tokens"])
+    usage_map = [
+        ("input_cached_tokens", model_input_cache),
+        ("input_tokens", model_input),
+        ("output_tokens", model_output),
+    ]
 
-    if usage.get("input_tokens"):
-        record_usage(session=session, model=model_input,
-                     units=usage["input_tokens"])
-
-    if usage.get("output_tokens"):
-        record_usage(session=session, model=model_output,
-                     units=usage["output_tokens"])
+    for key, model in usage_map:
+        tokens = usage.get(key)
+        if tokens:
+            record_usage(
+                session=session,
+                model=model,
+                units=tokens,
+            )
