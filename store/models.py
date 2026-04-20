@@ -1,6 +1,6 @@
 from django.db import models
 from django.core.validators import MinValueValidator
-from .utils import expression_image_upload_to, video_upload_to, short_uuid
+from .utils import expression_image_upload_to, video_upload_to, subtitle_audio_upload_to, short_uuid
 
 
 class AbstractCommon(models.Model):
@@ -142,6 +142,7 @@ class Subtitle(AbstractCommon):
 
     title = models.CharField(max_length=255)
     content = models.TextField()
+    audio = models.FileField(upload_to=subtitle_audio_upload_to, blank=True)
 
     def __str__(self) -> str:
         return self.title

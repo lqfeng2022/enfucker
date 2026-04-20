@@ -31,6 +31,20 @@ def video_upload_to(instance, filename):
     return f'store/video/{host_slug}/{safe_filename}'
 
 
+def subtitle_audio_upload_to(instance, filename):
+    """Upload to 'store/subtitle/<host.slug>/<filename>'."""
+    if instance.video.host:
+        host_slug = instance.video.host.slug
+    else:
+        host_slug = 'no_host'
+
+    # Clean filename to avoid weird characters
+    base, ext = os.path.splitext(filename)
+    safe_filename = f'{base}{ext}'
+
+    return f'store/subtitle/{host_slug}/{safe_filename}'
+
+
 def short_uuid():
     # Generate UUID4 and encode in URL-safe base64 without padding
     u = uuid.uuid4()
