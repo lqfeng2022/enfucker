@@ -45,12 +45,15 @@ def _get_start_of_day_utc(user_profile):
 def _fetch_messages(session, start_utc):
     qs = session.messages.filter(visible=True).select_related("learning")
 
+    # get ALL today's messages (NO LIMIT HERE)
     today = list(
         qs.filter(created_at__gte=start_utc)
         .order_by("created_at")
-        .values("role", "content", "created_at", "type", "learning__content")[:CHAT_CONTEXT_LIMIT]
+        .values("role", "content", "created_at", "type", "learning__content")
+        [-CHAT_CONTEXT_LIMIT:]  # only last N
     )
 
+    # If today already exceeds limit → just trim later
     if len(today) >= CHAT_CONTEXT_LIMIT:
         return today
 
@@ -59,7 +62,8 @@ def _fetch_messages(session, start_utc):
     history = list(
         qs.filter(created_at__lt=start_utc)
         .order_by("-created_at")
-        .values("role", "content", "created_at", "type", "learning__content")[:remaining]
+        .values("role", "content", "created_at", "type", "learning__content")
+        [:remaining]
     )[::-1]
 
     return history + today
