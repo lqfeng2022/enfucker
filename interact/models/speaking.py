@@ -3,62 +3,95 @@ from django.db import models
 from interact.utils.mediauploadto import speaking_audio_upload_to
 
 
-# interact_speakingsession
-class SpeakingSession(models.Model):
+# interact_mocktest
+class MockTest(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+
+    title = models.CharField(max_length=255)
+
+    playlist = models.OneToOneField(settings.STORE_PLAYLIST_MODEL, on_delete=models.CASCADE,
+                                    related_name='mock_test')
+
+    def __str__(self) -> str:
+        return f"{self.title}"
+
+    class Meta:
+        verbose_name_plural = 'Mock Tests'
+
+
+# interact_speakingattempt
+class SpeakingAttempt(models.Model):
+    STATUS_CHOICES = [
+        ('in_progress', 'In Progress'),
+        ('completed', 'Completed'),
+    ]
+
+    started_at = models.DateTimeField(auto_now_add=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
-                             related_name='speaking_sessions')
-    product = models.ForeignKey(settings.STORE_PRODUCT_MODEL, on_delete=models.SET_NULL,
-                                null=True, blank=True, related_name='speaking_sessions')
+                             related_name='attempts')
+    mock_test = models.ForeignKey(MockTest, on_delete=models.CASCADE,
+                                  related_name='attempts')
+
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES,
+                              default='in_progress')
+
+    overall_score = models.FloatField(null=True, blank=True)
 
     def __str__(self) -> str:
         return f"Speaking Attempt - {self.id}"
 
     class Meta:
-        unique_together = ('user', 'product')
         verbose_name_plural = 'Speaking Attempts'
+        ordering = ['-started_at']
 
 
-# interact_speakingresponse
-class SpeakingResponse(models.Model):
+# interact_speakinganswer
+class SpeakingAnswer(models.Model):
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('processing', 'Processing'),
+        ('done', 'Done'),
+        ('failed', 'Failed'),
+    ]
+
     created_at = models.DateTimeField(auto_now_add=True)
 
-    session = models.ForeignKey(SpeakingSession, on_delete=models.CASCADE,
-                                related_name='responses')
+    order = models.PositiveIntegerField()
 
-    attempt_number = models.PositiveIntegerField()
-
-    audio = models.FileField(upload_to=speaking_audio_upload_to, null=True,
-                             blank=True)
-    audio_seconds = models.IntegerField(blank=True, default=0)
-
+    audio = models.FileField(upload_to=speaking_audio_upload_to)
+    audio_seconds = models.IntegerField(blank=True)
     transcript = models.TextField(blank=True)  # stt
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES,
+                              default='pending')
+
+    product = models.ForeignKey(settings.STORE_PRODUCT_MODEL, on_delete=models.CASCADE,
+                                related_name='speaking_answers')
+    attempt = models.ForeignKey(SpeakingAttempt, on_delete=models.CASCADE,
+                                related_name='answers')
 
     def __str__(self) -> str:
-        return f'Response {self.attempt_number} (Session {self.session_id})'
+        return f'Speaking Answer - {self.id}'
 
     class Meta:
-        unique_together = ('session', 'attempt_number')
-        verbose_name_plural = 'Speaking Responses'
-        ordering = ['attempt_number']
+        unique_together = ('product', 'attempt')
+        indexes = [
+            models.Index(fields=['attempt', 'order']),
+        ]
+        verbose_name_plural = 'Speaking Answers'
+        ordering = ['order']
 
 
 # interact_speakingevaluation
 class SpeakingEvaluation(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
-    response = models.OneToOneField(SpeakingResponse, on_delete=models.CASCADE,
-                                    related_name='evaluation')
+    answer = models.OneToOneField(SpeakingAnswer, on_delete=models.CASCADE,
+                                  related_name='evaluation')
 
-    fluency_score = models.FloatField(null=True, blank=True)
-    lexical_score = models.FloatField(null=True, blank=True)
-    grammar_score = models.FloatField(null=True, blank=True)
-    pronunciation_score = models.FloatField(null=True, blank=True)
-
+    scores = models.JSONField(default=dict)
     overall_score = models.FloatField(null=True, blank=True)
-
     feedback = models.TextField(blank=True)
 
     def __str__(self) -> str:
@@ -69,20 +102,17 @@ class SpeakingEvaluation(models.Model):
         ordering = ['-created_at']
 
 
-# interact_speakingrewrie
+# interact_speakingrewrite
 class SpeakingRewrite(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
-    response = models.ForeignKey(SpeakingResponse, on_delete=models.CASCADE,
-                                 related_name='rewrites')
+    answer = models.OneToOneField(SpeakingAnswer, on_delete=models.CASCADE,
+                                  related_name='rewrite')
 
-    improved_text = models.TextField()
-    band_target = models.DecimalField(max_digits=2, decimal_places=1)
+    content = models.TextField()
 
     def __str__(self) -> str:
-        return f'Speaking Improvement - {self.id}'
+        return f'Speaking Rewrite - {self.id}'
 
     class Meta:
-        unique_together = ('response', 'band_target')
-        verbose_name_plural = 'Speaking Improvements'
-        ordering = ['band_target']
+        verbose_name_plural = 'Speaking Rewrites'

@@ -154,6 +154,7 @@ STORE_HOST_MODEL = 'store.Host'
 STORE_LANGUAGE_MODEL = 'store.Language'
 STORE_CITY_MODEL = 'store.City'
 STORE_PRODUCT_MODEL = 'store.Product'
+STORE_PLAYLIST_MODEL = 'store.Playlist'
 DEFAULT_HOST_SLUG = 'lee'
 
 # billing app
