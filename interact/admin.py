@@ -169,9 +169,8 @@ class ChatMessageAdmin(AudioThumbnailMixin, ChatSessionLinkMixin, FormattedCreat
     # list_editable = ['is_voice']
     search_fields = ['session__id']
     autocomplete_fields = ['event']
-    readonly_fields = ['cost', 'session', 'role', 'audio_seconds', 'content',
-                       'is_enhancement', 'enhanced_content', 'audio', 'is_voice',
-                       'thumbnail']
+    readonly_fields = ['cost', 'session', 'role', 'audio_seconds', 'is_enhancement',
+                       'enhanced_content', 'audio', 'is_voice', 'thumbnail']
 
     def display_content(self, obj):
         if not obj.content:
@@ -204,3 +203,58 @@ class DebitLedgerAdmin(FormattedCreateDateMixin, admin.ModelAdmin):
     list_filter = ['created_at']
 
     search_fields = ['user__username']
+
+
+@admin.register(models.MockTest)
+class MockTestAdmin(FormattedCreateDateMixin, admin.ModelAdmin):
+    list_display = ['id', 'title', 'playlist', 'formatted_created_at']
+
+    list_per_page = 15
+    list_filter = ['created_at']
+
+    autocomplete_fields = ['playlist']
+    search_fields = ['playlist__title', 'title']
+
+
+@admin.register(models.SpeakingAttempt)
+class SpeakingAttemptAdmin(admin.ModelAdmin):
+    list_display = ['id', 'status', 'user', 'mock_test', 'started_at',
+                    'completed_at']
+
+    list_per_page = 15
+    list_filter = ['started_at']
+
+    autocomplete_fields = ['mock_test', 'user']
+    search_fields = ['mock_test__title']
+
+
+class SpeakingRewriteInline(admin.StackedInline):
+    model = models.SpeakingRewrite
+
+    fields = ['id', 'content']
+
+    extra = 0
+    min_num = 0
+    max_num = 1
+
+
+class SpeakingEvaluationInline(admin.StackedInline):
+    model = models.SpeakingEvaluation
+
+    fields = ['id', 'overall_score', 'scores', 'feedback']
+
+    extra = 0
+    min_num = 0
+    max_num = 1
+
+
+@admin.register(models.SpeakingAnswer)
+class SpeakingAnswerAdmin(FormattedCreateDateMixin, admin.ModelAdmin):
+    list_display = ['id', 'attempt', 'product', 'audio_seconds', 'status',
+                    'formatted_created_at']
+    inlines = [SpeakingRewriteInline, SpeakingEvaluationInline]
+
+    list_per_page = 15
+    list_filter = ['created_at']
+
+    autocomplete_fields = ['attempt', 'product']
