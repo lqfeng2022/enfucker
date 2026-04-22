@@ -1,37 +1,33 @@
 from ai.utils.normalizetext import normalize_text
 
 
-def build_base_prompt(base_context):
-    if not base_context:
-        return ''
+def build_host_prompt(base_context, persona_context):
+    blocks = []
 
-    blocks = [
-        f"# BASE INSTRUCTIONS",
-        f"# Role: {normalize_text(base_context['name'])}",
-        normalize_text(base_context['content'])
-    ]
+    # BASE
+    if base_context and base_context.get("content"):
+        base_blocks = [
+            f"# BASE INSTRUCTIONS",
+            normalize_text(base_context["content"])
+        ]
 
-    result = normalize_text('\n\n'.join(blocks))
+        blocks.append('\n\n'.join(
+            [b.strip() for b in base_blocks if b and b.strip()]
+        ))
 
-    return result
+    # PERSONA
+    if persona_context:
+        persona_blocks = [
+            f"# PERSONA INSTRUCTIONS",
+            normalize_text(persona_context.get("identity")),
+            normalize_text(persona_context.get("personality")),
+            normalize_text(persona_context.get("communication_style")),
+            normalize_text(persona_context.get("behavior")),
+            normalize_text(persona_context.get("constraints")),
+        ]
 
+        blocks.append('\n\n'.join(
+            [b.strip() for b in persona_blocks if b and b.strip()]
+        ))
 
-def build_persona_prompt(persona_context):
-    if not persona_context:
-        return ''
-
-    blocks = [
-        f"# PERSONA INSTRUCTIONS",
-        f"# You are {persona_context['name']}, {persona_context['role']}.",
-        normalize_text(persona_context['identity']),
-        normalize_text(persona_context['personality']),
-        normalize_text(persona_context['communication_style']),
-        normalize_text(persona_context['behavior']),
-        normalize_text(persona_context['constraints']),
-    ]
-
-    result = normalize_text('\n\n'.join(
-        [b.strip() for b in blocks if b and b.strip()]
-    ))
-
-    return result
+    return normalize_text('\n\n\n'.join(blocks))
