@@ -48,10 +48,10 @@ def _fetch_messages(session, start_utc):
     # get ALL today's messages (NO LIMIT HERE)
     today = list(
         qs.filter(created_at__gte=start_utc)
-        .order_by("created_at")
+        .order_by("-created_at")  # newest first
         .values("role", "content", "created_at", "type", "learning__content")
-        [-CHAT_CONTEXT_LIMIT:]  # only last N
-    )
+        [:CHAT_CONTEXT_LIMIT]  # only last N
+    )[::-1]  # reverse back to chronological order
 
     # If today already exceeds limit → just trim later
     if len(today) >= CHAT_CONTEXT_LIMIT:
