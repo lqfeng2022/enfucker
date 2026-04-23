@@ -91,20 +91,20 @@ def _build_summary_prompts(session):
     memory = []
 
     if summary.content:
-        memory.append(f"SUMMARY:\n{summary.content}")
+        memory.append(f"## SUMMARY:\n{summary.content}")
 
     if summary.topics:
-        memory.append(f"TOPICS:\n{', '.join(summary.topics)}")
+        memory.append(f"## TOPICS:\n{', '.join(summary.topics)}")
 
     if summary.current:
-        memory.append(f"WORKING MEMORY:\n{summary.current}")
+        memory.append(f"## WORKING MEMORY:\n{summary.current}")
 
     if not memory:
         return []
 
     return [{
         "role": "system",
-        "content": "CONVERSATION MEMORY:\n\n" + "\n\n".join(memory)
+        "content": "# CONVERSATION MEMORY:\n\n" + "\n\n".join(memory)
     }]
 
 
@@ -116,7 +116,7 @@ def _build_time_prompt(session):
     return {
         "role": "system",
         "content": (
-            f"Current time: {local_dt.strftime('%Y-%m-%d %H:%M')}\n"
+            f"Current time: {local_dt.strftime('%Y-%m-%d %H:%M')} "
             "Each message has a timestamp and type (text, voice, call). "
             "Use this information naturally, but do not include timestamps unless asked."
         )

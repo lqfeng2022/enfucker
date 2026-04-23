@@ -1,5 +1,11 @@
 import re
 
+EMOJI_PATTERN = r'[\U0001F600-\U0001F64F\U0001F300-\U0001F5FF\U0001F680-\U0001F6FF\U0001F1E0-\U0001F1FF]'
+# \U0001F600-\U0001F64F - Emoticons (😀 to 🙏)
+# \U0001F300-\U0001F5FF - Misc Symbols and Pictographs (🌀 to 🗿)
+# \U0001F680-\U0001F6FF - Transport and Map (🚀 to 🛿)
+# \U0001F1E0-\U0001F1FF - Regional Indicator Symbols (🇦 to 🇿, used for flags)
+
 
 def normalize_text(text):
     """Normalize newlines and trim whitespace.
@@ -24,6 +30,9 @@ def format_text(text: str) -> str:
         return ''
 
     text = normalize_text(text)
+
+    # Remove emojis
+    text = re.sub(EMOJI_PATTERN, '', text)
 
     # Remove all asterisks
     text = text.replace('*', '')
